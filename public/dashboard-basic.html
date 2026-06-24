@@ -1,0 +1,1586 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="description" content="Manage your drop.cv resume site.">
+  <title>Dashboard ??? drop.cv</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%278%27 fill=%27%230F6E56%27/%3E%3Ctext x=%2716%27 y=%2722%27 font-family=%27system-ui,sans-serif%27 font-size=%2716%27 font-weight=%27700%27 fill=%27white%27 text-anchor=%27middle%27%3Ed.%3C/text%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="design-system.css">
+  <script defer src="api/dropcv-api.js"></script>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      --color-white: #FFFFFF;
+      --color-black: #0F0F0F;
+      --color-accent: #0F6E56;
+      --color-gray: #F5F5F5;
+      --color-gray-text: #666666;
+      --color-gray-light: #E0E0E0;
+      --color-red: #DC2626;
+      --color-teal-light: rgba(15, 110, 86, 0.1);
+      --sidebar-width: 220px;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background-color: var(--color-white);
+      color: var(--color-black);
+      line-height: 1.6;
+      font-size: 16px;
+      overflow-x: hidden;
+    }
+
+    #dashboardContent {
+      position: relative;
+    }
+
+    .auth-pending {
+      visibility: visible;
+    }
+
+    .auth-ready {
+      visibility: visible;
+    }
+
+    .auth-loading-shell {
+      position: absolute;
+      inset: 0;
+      z-index: 2;
+      display: none;
+      flex-direction: column;
+      gap: 24px;
+      padding: 24px;
+      background: var(--color-white);
+    }
+
+    .auth-pending .auth-loading-shell {
+      display: flex;
+    }
+
+    .auth-pending > :not(.auth-loading-shell) {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .auth-ready > :not(.auth-loading-shell) {
+      opacity: 1;
+      transition: opacity 180ms ease;
+    }
+
+    .skeleton-block {
+      border-radius: 12px;
+      background: linear-gradient(90deg, #ececec 25%, #f6f6f6 37%, #ececec 63%);
+      background-size: 400% 100%;
+      animation: shimmer 1.2s ease-in-out infinite;
+    }
+
+    @keyframes shimmer {
+      0% { background-position: 100% 0; }
+      100% { background-position: 0 0; }
+    }
+
+    /* Layout */
+    .dashboard-container {
+      display: flex;
+      min-height: 100vh;
+    }
+
+    /* Mobile Menu Button */
+    .mobile-menu-btn {
+      display: none;
+      position: fixed;
+      top: 16px;
+      left: 16px;
+      z-index: 1001;
+      background: var(--color-black);
+      color: var(--color-white);
+      border: none;
+      border-radius: 8px;
+      padding: 10px 14px;
+      cursor: pointer;
+      font-size: 20px;
+    }
+
+    /* Sidebar Overlay */
+    .sidebar-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 999;
+    }
+
+    .sidebar-overlay.active {
+      display: block;
+    }
+
+    /* Sidebar */
+    .sidebar {
+      width: var(--sidebar-width);
+      height: 100vh;
+      position: fixed;
+      left: 0;
+      top: 0;
+      background: var(--color-white);
+      border-right: 1px solid var(--color-gray-light);
+      display: flex;
+      flex-direction: column;
+      z-index: 1000;
+    }
+
+    .sidebar-logo {
+      padding: 24px;
+      font-size: 24px;
+      font-weight: 700;
+      color: var(--color-black);
+      text-decoration: none;
+      border-bottom: 1px solid var(--color-gray-light);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .sidebar-logo .logo-icon {
+      width: 40px;
+      height: 40px;
+      background: var(--color-accent);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--color-white);
+      font-weight: 700;
+      font-size: 20px;
+    }
+
+    .sidebar-nav {
+      flex: 1;
+      padding: 16px 0;
+    }
+
+    .nav-link {
+      display: flex;
+      align-items: center;
+      padding: 12px 24px;
+      color: var(--color-black);
+      text-decoration: none;
+      font-size: 15px;
+      font-weight: 500;
+      border-left: 3px solid transparent;
+      transition: all 0.2s;
+      gap: 10px;
+      position: relative;
+    }
+
+    .nav-link:hover {
+      background: var(--color-gray);
+    }
+
+    .nav-link.active {
+      border-left-color: var(--color-accent);
+      color: var(--color-accent);
+      background: rgba(15, 110, 86, 0.05);
+    }
+
+    .notification-dot {
+      position: absolute;
+      top: 12px;
+      right: 24px;
+      width: 8px;
+      height: 8px;
+      background: var(--color-red);
+      border-radius: 50%;
+    }
+
+    .sidebar-bottom {
+      padding: 16px 24px;
+      border-top: 1px solid var(--color-gray-light);
+    }
+
+    .plan-badge {
+      display: inline-block;
+      background: var(--color-accent);
+      color: var(--color-white);
+      padding: 4px 12px;
+      border-radius: 16px;
+      font-size: 12px;
+      font-weight: 600;
+      margin-bottom: 16px;
+    }
+
+    .user-info {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+
+    .user-avatar {
+      width: 36px;
+      height: 36px;
+      background: var(--color-accent);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--color-white);
+      font-weight: 600;
+      font-size: 14px;
+    }
+
+    .user-details {
+      flex: 1;
+      overflow: hidden;
+    }
+
+    .user-name {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--color-black);
+    }
+
+    .user-email {
+      font-size: 12px;
+      color: var(--color-gray-text);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .sign-out-link {
+      display: block;
+      color: var(--color-red);
+      text-decoration: none;
+      font-size: 13px;
+      font-weight: 500;
+      padding-top: 8px;
+    }
+
+    .sign-out-link:hover {
+      text-decoration: underline;
+    }
+
+    /* Main Content */
+    .main-content {
+      flex: 1;
+      margin-left: var(--sidebar-width);
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+
+    /* Top Bar */
+    .top-bar {
+      background: var(--color-white);
+      border-bottom: 1px solid var(--color-gray-light);
+      padding: 16px 40px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .top-bar-title {
+      font-size: 20px;
+      font-weight: 600;
+    }
+
+    .top-bar-right {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+    }
+
+    .content-area {
+      padding: 32px 40px;
+      flex: 1;
+    }
+
+    .section {
+      display: none;
+    }
+
+    .section.active {
+      display: block;
+    }
+
+    /* Headings */
+    h1 {
+      font-size: 32px;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    .subheading {
+      font-size: 16px;
+      color: var(--color-gray-text);
+      margin-bottom: 32px;
+    }
+
+    h2 {
+      font-size: 24px;
+      font-weight: 600;
+      margin-bottom: 16px;
+    }
+
+    h3 {
+      font-size: 18px;
+      font-weight: 600;
+      margin-bottom: 12px;
+    }
+
+    /* Cards */
+    .card {
+      background: var(--color-white);
+      border-radius: 12px;
+      padding: 24px;
+    }
+
+    /* Stat Cards */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 24px;
+      margin-bottom: 32px;
+    }
+
+    .stat-card {
+      background: var(--color-white);
+      border: 1px solid var(--color-gray-light);
+      border-radius: 12px;
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .stat-label {
+      font-size: 14px;
+      color: var(--color-gray-text);
+      margin-bottom: 8px;
+    }
+
+    .stat-value {
+      font-size: 32px;
+      font-weight: 700;
+      color: var(--color-black);
+    }
+
+    .stat-trend {
+      font-size: 13px;
+      color: var(--color-accent);
+      margin-top: 8px;
+    }
+
+    /* URL Chip */
+    .url-section {
+      background: var(--color-white);
+      border: 1px solid var(--color-gray-light);
+      border-radius: 12px;
+      padding: 20px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 32px;
+    }
+
+    .url-chip {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 16px;
+      font-weight: 500;
+    }
+
+    .url-chip svg {
+      width: 20px;
+      height: 20px;
+      color: var(--color-accent);
+    }
+
+    /* Buttons */
+    .btn {
+      padding: 10px 20px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+      transition: all 0.2s;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .btn-primary {
+      background: var(--color-accent);
+      color: var(--color-white);
+    }
+
+    .btn-primary:hover {
+      background: #0d5d48;
+    }
+
+    .btn-secondary {
+      background: var(--color-white);
+      color: var(--color-black);
+      border: 1px solid var(--color-gray-light);
+    }
+
+    .btn-secondary:hover {
+      background: var(--color-gray);
+    }
+
+    .btn-outline {
+      background: transparent;
+      color: var(--color-black);
+      border: 1px solid var(--color-gray-light);
+    }
+
+    .btn-outline:hover {
+      border-color: var(--color-black);
+    }
+
+    .btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    /* Quick Actions */
+    .quick-actions {
+      background: var(--color-white);
+      border: 1px solid var(--color-gray-light);
+      border-radius: 12px;
+      padding: 24px;
+      margin-bottom: 24px;
+    }
+
+    .quick-actions-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+    }
+
+    .quick-action-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      padding: 20px;
+      border: 1px solid var(--color-gray-light);
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s;
+      text-align: center;
+    }
+
+    .quick-action-item:hover:not(.blurred-overlay) {
+      border-color: var(--color-accent);
+      background: rgba(15, 110, 86, 0.05);
+    }
+
+    .quick-action-item svg {
+      width: 24px;
+      height: 24px;
+      color: var(--color-black);
+    }
+
+    .quick-action-item span {
+      font-size: 13px;
+      font-weight: 500;
+    }
+
+    /* Activity Feed */
+    .activity-feed {
+      background: var(--color-white);
+      border: 1px solid var(--color-gray-light);
+      border-radius: 12px;
+      padding: 24px;
+    }
+
+    .activity-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 0;
+      border-bottom: 1px solid var(--color-gray-light);
+    }
+
+    .activity-item:last-child {
+      border-bottom: none;
+    }
+
+    .country-flag {
+      font-size: 24px;
+    }
+
+    .activity-details {
+      flex: 1;
+    }
+
+    .activity-location {
+      font-size: 14px;
+      font-weight: 500;
+      margin-bottom: 2px;
+    }
+
+    .activity-time {
+      font-size: 12px;
+      color: var(--color-gray-text);
+    }
+
+    .referrer-icon {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 13px;
+      color: var(--color-gray-text);
+    }
+
+    .referrer-icon svg {
+      width: 18px;
+      height: 18px;
+    }
+
+    /* Blurred Overlay */
+    .blurred-overlay {
+      position: relative;
+      filter: blur(4px);
+      pointer-events: none;
+      user-select: none;
+    }
+
+    .blurred-overlay-wrapper {
+      position: relative;
+    }
+
+    .blurred-overlay-wrapper::after {
+      content: '🔒 Upgrade to Pro';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: var(--color-black);
+      color: white;
+      padding: 12px 24px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 500;
+      white-space: nowrap;
+      z-index: 10;
+    }
+
+    /* My Site Section */
+    .site-preview {
+      border: 2px solid var(--color-gray-light);
+      border-radius: 12px;
+      overflow: hidden;
+      margin-bottom: 24px;
+      background: var(--color-gray);
+    }
+
+    .site-preview iframe {
+      width: 100%;
+      height: 500px;
+      border: none;
+      display: block;
+    }
+
+    .site-actions {
+      display: flex;
+      gap: 16px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .upload-area {
+      background: var(--color-white);
+      border: 2px dashed var(--color-accent);
+      border-radius: 12px;
+      padding: 60px 40px;
+      text-align: center;
+      margin: 24px 0;
+      display: none;
+      transition: all 0.2s;
+    }
+
+    .upload-area.active {
+      display: block;
+    }
+
+    .upload-area.drag-over {
+      background: var(--color-teal-light);
+      border-style: solid;
+    }
+
+    .upload-icon {
+      width: 64px;
+      height: 64px;
+      margin: 0 auto 16px;
+    }
+
+    .upload-area p {
+      color: var(--color-black);
+      font-size: 16px;
+      font-weight: 500;
+      margin-bottom: 8px;
+    }
+
+    .upload-formats {
+      font-size: 13px;
+      color: var(--color-gray-text);
+      margin-top: 12px;
+    }
+
+    .last-updated {
+      font-size: 13px;
+      color: var(--color-gray-text);
+      margin-top: 16px;
+    }
+
+    /* Upgrade Card */
+    .upgrade-card {
+      background: linear-gradient(135deg, var(--color-accent) 0%, #0d5d48 100%);
+      color: var(--color-white);
+      border-radius: 12px;
+      padding: 32px;
+      text-align: center;
+      margin-bottom: 24px;
+    }
+
+    .upgrade-card h2 {
+      font-size: 28px;
+      margin-bottom: 12px;
+      color: var(--color-white);
+    }
+
+    .upgrade-card p {
+      font-size: 16px;
+      margin-bottom: 24px;
+      opacity: 0.9;
+    }
+
+    .upgrade-card .btn {
+      background: var(--color-white);
+      color: var(--color-accent);
+    }
+
+    /* Domains Section */
+    .domain-item {
+      background: var(--color-white);
+      border: 1px solid var(--color-gray-light);
+      border-radius: 12px;
+      padding: 20px 24px;
+      margin-bottom: 16px;
+    }
+
+    .domain-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 16px;
+    }
+
+    .domain-info {
+      flex: 1;
+    }
+
+    .domain-name {
+      font-size: 16px;
+      font-weight: 600;
+      margin-bottom: 4px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .domain-badge {
+      background: var(--color-accent);
+      color: var(--color-white);
+      font-size: 11px;
+      font-weight: 600;
+      padding: 2px 8px;
+      border-radius: 4px;
+    }
+
+    .domain-status {
+      font-size: 13px;
+      color: var(--color-gray-text);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      background: #10B981;
+      border-radius: 50%;
+    }
+
+    .domain-actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    .add-domain-note {
+      font-size: 13px;
+      color: var(--color-gray-text);
+      text-align: center;
+      margin-top: 12px;
+    }
+
+    /* Settings Section */
+    .settings-section {
+      margin-bottom: 32px;
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    .form-group label {
+      display: block;
+      font-size: 14px;
+      font-weight: 500;
+      margin-bottom: 8px;
+    }
+
+    .form-group input,
+    .form-group textarea {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid var(--color-gray-light);
+      border-radius: 8px;
+      font-size: 14px;
+      font-family: inherit;
+      transition: border-color 0.2s;
+    }
+
+    .form-group input:focus,
+    .form-group textarea:focus {
+      outline: none;
+      border-color: var(--color-accent);
+    }
+
+    .form-group textarea {
+      min-height: 100px;
+      resize: vertical;
+    }
+
+    .privacy-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 16px 0;
+      border-bottom: 1px solid var(--color-gray-light);
+    }
+
+    .privacy-item:last-child {
+      border-bottom: none;
+    }
+
+    .privacy-label {
+      font-weight: 500;
+      margin-bottom: 4px;
+    }
+
+    .toggle {
+      position: relative;
+      display: inline-block;
+      width: 50px;
+      height: 30px;
+    }
+
+    .toggle input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    .toggle-slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: var(--color-gray-light);
+      transition: 0.3s;
+      border-radius: 34px;
+    }
+
+    .toggle-slider:before {
+      position: absolute;
+      content: "";
+      height: 27px;
+      width: 27px;
+      left: 2px;
+      bottom: 2px;
+      background: white;
+      transition: 0.3s;
+      border-radius: 50%;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    }
+
+    .toggle input:checked + .toggle-slider {
+      background: var(--color-accent);
+    }
+
+    .toggle input:checked + .toggle-slider:before {
+      transform: translateX(20px);
+    }
+
+    .toggle-status {
+      font-size: 14px;
+      color: var(--color-gray-text);
+    }
+
+    .toggle-status.visible {
+      color: var(--color-accent);
+    }
+
+    /* Responsive */
+    @media (max-width: 1024px) {
+      .stats-grid,
+      .quick-actions-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    @media (max-width: 768px) {
+      .sidebar {
+        transform: translateX(-100%);
+        transition: transform 0.3s;
+      }
+
+      .sidebar.active {
+        transform: translateX(0);
+      }
+
+      .main-content {
+        margin-left: 0;
+      }
+
+      .mobile-menu-btn {
+        display: block;
+      }
+
+      .sidebar-overlay.active {
+        display: block;
+      }
+
+      .content-area {
+        padding: 20px 16px;
+      }
+
+      .top-bar {
+        padding: 12px 14px;
+      }
+
+      .auth-loading-shell {
+        padding: 16px;
+        gap: 16px;
+      }
+
+      .quick-actions,
+      .activity-feed {
+        padding: 20px;
+      }
+
+      .stats-grid,
+      .quick-actions-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .quick-action-item {
+        padding: 16px;
+      }
+
+      .domain-actions {
+        flex-wrap: wrap;
+      }
+
+      .mobile-menu-btn {
+        top: 12px;
+        left: 12px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Mobile Menu Button -->
+  <button class="mobile-menu-btn" onclick="toggleSidebar()">☰</button>
+
+  <!-- Sidebar Overlay -->
+  <div class="sidebar-overlay" onclick="toggleSidebar()"></div>
+
+  <div class="dashboard-container">
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+      <a href="index.html" class="sidebar-logo">
+        <span class="logo-icon">d.</span>
+        drop.cv
+      </a>
+
+      <nav class="sidebar-nav">
+        <a href="#home" class="nav-link active" data-section="home">
+          🏠 Home
+        </a>
+        <a href="#site" class="nav-link" data-section="site">
+          🌐 My Site
+        </a>
+        <a href="#analytics" class="nav-link" data-section="analytics">
+          📊 Analytics
+          <span class="notification-dot"></span>
+        </a>
+        <a href="#domains" class="nav-link" data-section="domains">
+          🔗 Domains
+        </a>
+        <a href="#settings" class="nav-link" data-section="settings">
+          ⚙️ Settings
+        </a>
+      </nav>
+
+      <div class="sidebar-bottom">
+        <div class="plan-badge" id="plan-badge">Basic Plan</div>
+        <div class="user-info">
+          <div class="user-avatar" id="user-avatar">MJ</div>
+          <div class="user-details">
+            <div class="user-name" id="user-name">Mahdi Jadidi</div>
+            <div class="user-email" id="user-email">mahdi@example.com</div>
+          </div>
+        </div>
+        <a href="#" class="sign-out-link">Sign out</a>
+      </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main id="dashboardContent" class="main-content auth-pending">
+      <div class="auth-loading-shell" aria-hidden="true">
+        <div style="display:flex; justify-content:space-between; gap:16px; align-items:center;">
+          <div class="skeleton-block" style="width:200px; height:28px;"></div>
+          <div class="skeleton-block" style="width:140px; height:38px; border-radius:999px;"></div>
+        </div>
+        <div style="display:grid; grid-template-columns:repeat(4, minmax(0, 1fr)); gap:20px;">
+          <div class="skeleton-block" style="height:120px;"></div>
+          <div class="skeleton-block" style="height:120px;"></div>
+          <div class="skeleton-block" style="height:120px;"></div>
+          <div class="skeleton-block" style="height:120px;"></div>
+        </div>
+        <div class="skeleton-block" style="height:220px;"></div>
+        <div class="skeleton-block" style="height:180px;"></div>
+      </div>
+      <!-- Top Bar -->
+      <header class="top-bar">
+        <h2 class="top-bar-title" id="section-title">Home</h2>
+        <div class="top-bar-right">
+          <a href="signup.html#step-3" class="btn btn-primary upgrade-btn">
+            Upgrade to Pro →
+          </a>
+        </div>
+      </header>
+
+      <!-- Content Area -->
+      <div class="content-area">
+        <!-- Home Section -->
+        <section class="section active" id="home">
+          <h1 class="welcome-heading">Good to see you, Mahdi.</h1>
+          <p class="subheading">Here's what's happening with your portfolio</p>
+
+          <!-- URL Section -->
+          <div class="url-section">
+            <div class="url-chip">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
+                <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
+              </svg>
+              <span id="user-url">mahdijadidi.drop.cv</span>
+            </div>
+            <button class="btn btn-outline" onclick="copyURL()">Copy link</button>
+          </div>
+
+          <!-- Site status card (rendered by dropcv-upload.js) -->
+          <div data-dropcv-status></div>
+
+          <!-- Stats Grid -->
+          <div class="stats-grid">
+            <div class="stat-card">
+              <div class="stat-label">Your site</div>
+              <div class="stat-value">Live</div>
+              <div class="stat-trend">Last updated: just now</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-label">Your link</div>
+              <div class="stat-value">mahdijadidi.drop.cv</div>
+              <div class="stat-trend">Upgrade to Pro to see view count</div>
+            </div>
+          </div>
+
+          <!-- Quick Actions -->
+          <div class="quick-actions">
+            <h3>Quick actions</h3>
+            <div class="quick-actions-grid">
+              <div class="quick-action-item" onclick="copyURL()">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+                  <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+                </svg>
+                <span>Copy URL</span>
+              </div>
+              <div class="quick-action-item">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                </svg>
+                <span>QR Code</span>
+              </div>
+              <div class="quick-action-item">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                  <polyline points="7 10 12 15 17 10"/>
+                  <line x1="12" y1="15" x2="12" y2="3"/>
+                </svg>
+                <span>Download PDF</span>
+              </div>
+              <div class="quick-action-item">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="12" cy="12" r="10"/>
+                  <path d="M12 6v6l4 2"/>
+                </svg>
+                <span>Open to Work</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Recent Activity -->
+          <div class="activity-feed">
+              <h3>Recent activity</h3>
+              <div class="activity-item">
+                <span class="country-flag">🇺🇸</span>
+                <div class="activity-details">
+                  <div class="activity-location">San Francisco, USA</div>
+                  <div class="activity-time">2 minutes ago</div>
+                </div>
+                <div class="referrer-icon">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+                  Direct
+                </div>
+              </div>
+              <div class="activity-item">
+                <span class="country-flag">🇬🇧</span>
+                <div class="activity-details">
+                  <div class="activity-location">London, UK</div>
+                  <div class="activity-time">15 minutes ago</div>
+                </div>
+                <div class="referrer-icon">
+                  <svg viewBox="0 0 24 24" fill="#0077B5"><path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"/></svg>
+                  LinkedIn
+                </div>
+              </div>
+              <div class="activity-item">
+                <span class="country-flag">🇩🇪</span>
+                <div class="activity-details">
+                  <div class="activity-location">Berlin, Germany</div>
+                  <div class="activity-time">1 hour ago</div>
+                </div>
+                <div class="referrer-icon">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+                  Direct
+                </div>
+              </div>
+          </div>
+        </section>
+
+        <!-- My Site Section -->
+        <section class="section" id="site">
+          <h1>Upload your site</h1>
+          <p class="subheading">Upload your HTML/CSS/JS files and we'll publish them to your subdomain instantly.</p>
+
+          <!-- Upload zone (built by dropcv-upload.js) -->
+          <div id="site-upload-zone"></div>
+
+          <!-- Publish button (disabled until a file is selected) -->
+          <button class="dropcv-deploy-btn" id="site-deploy-btn" type="button" disabled>Go live →</button>
+
+          <!-- Current deployment status (hidden unless a deployment exists) -->
+          <div id="site-current-status" style="display:none;">
+            <div class="dropcv-status-card live" style="margin-top: 20px;">
+              <div class="dropcv-status-row">
+                <span class="dropcv-status-dot"></span>
+                <span class="dropcv-status-title">Live</span>
+              </div>
+              <div class="dropcv-status-url" id="current-status-url"></div>
+              <div class="dropcv-status-updated" id="current-status-updated">Last updated: just now</div>
+              <div class="dropcv-status-actions">
+                <a class="dropcv-btn-teal" id="current-status-visit" href="#" target="_blank" rel="noopener">Visit your site →</a>
+                <a class="dropcv-btn-ghost" id="current-status-update" href="#site-upload-zone">Update site</a>
+              </div>
+            </div>
+          </div>
+
+          <!-- Progress / result container (filled by runDeploySimulation) -->
+          <div id="site-progress-container"></div>
+
+          <!-- Blurred upgrade card: PDF → site (built by dropcv-upload.js) -->
+          <div id="site-upgrade-card"></div>
+        </section>
+
+        <!-- Analytics Section -->
+        <section class="section" id="analytics">
+          <div class="upgrade-card">
+            <h2>📊 Unlock Analytics</h2>
+            <p>See detailed insights about your portfolio traffic, including page views, referrers, and visitor locations.</p>
+            <a href="signup.html#step-3" class="btn">Upgrade to Pro →</a>
+          </div>
+        </section>
+
+        <!-- Domains Section -->
+        <section class="section" id="domains">
+          <h1>Domains</h1>
+          <p class="subheading">Manage your subdomain</p>
+
+          <div class="domain-item">
+            <div class="domain-header">
+              <div class="domain-info">
+                <div class="domain-name">mahdijadidi.drop.cv <span class="domain-badge">Primary</span></div>
+                <div class="domain-status">
+                  <span class="status-dot"></span> Live
+                </div>
+              </div>
+            </div>
+            <div class="domain-actions">
+              <button class="btn btn-outline">Copy</button>
+              <button class="btn btn-outline">Visit</button>
+            </div>
+          </div>
+
+          <button class="btn btn-primary add-domain-btn blurred-overlay-wrapper" style="width: 100%;">
+            <div class="blurred-overlay">Add second domain</div>
+          </button>
+          <div class="add-domain-note">Upgrade to Pro for a 2nd domain</div>
+        </section>
+
+        <!-- Settings Section -->
+        <section class="section" id="settings">
+          <h1>Settings</h1>
+          <p class="subheading">Manage your account and profile</p>
+
+          <div class="settings-section">
+            <h2>Profile</h2>
+            <div class="card">
+              <div class="form-group">
+                <label for="full-name">Full name</label>
+                <input type="text" id="full-name" value="Mahdi Jadidi">
+              </div>
+              <div class="form-group">
+                <label for="job-title">Job title</label>
+                <input type="text" id="job-title" value="Software Engineer">
+              </div>
+              <div class="form-group">
+                <label for="city">City</label>
+                <input type="text" id="city" value="San Francisco">
+              </div>
+              <div class="form-group">
+                <label for="bio">Bio</label>
+                <textarea id="bio" placeholder="Tell us about yourself...">Software engineer with 5+ years of experience building scalable web applications.</textarea>
+              </div>
+            </div>
+          </div>
+
+          <div class="settings-section">
+            <h2>Contact</h2>
+            <div class="card">
+              <div class="form-group">
+                <label for="contact-email">Email</label>
+                <input type="email" id="contact-email" value="mahdi@example.com">
+              </div>
+              <div class="form-group">
+                <label for="linkedin-url">LinkedIn URL</label>
+                <input type="url" id="linkedin-url" value="https://linkedin.com/in/mahdijadidi">
+              </div>
+              <div class="form-group">
+                <label for="phone">Phone (optional)</label>
+                <input type="tel" id="phone" placeholder="+1 (555) 123-4567">
+              </div>
+            </div>
+          </div>
+
+          <div class="settings-section">
+            <h2>Privacy</h2>
+            <div class="card">
+              <div class="privacy-item">
+                <div>
+                  <div class="privacy-label">Show in public Discovery</div>
+                  <div style="font-size: 13px; color: var(--color-gray-text);">Your profile will be visible to everyone</div>
+                </div>
+                <label class="toggle">
+                  <input type="checkbox" checked>
+                  <span class="toggle-slider"></span>
+                </label>
+              </div>
+              <div class="privacy-item">
+                <div>
+                  <div class="privacy-label">Open to work</div>
+                  <div style="font-size: 13px; color: var(--color-gray-text);">Recruiters can see you're looking</div>
+                </div>
+                <label class="toggle">
+                  <input type="checkbox">
+                  <span class="toggle-slider"></span>
+                </label>
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    const revealTargets = document.querySelectorAll('.reveal, .reveal-left, .reveal-scale, .section-stagger');
+    const revealObserver = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('is-visible');
+          revealObserver.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.18, rootMargin: '0px 0px -8% 0px' });
+
+    revealTargets.forEach((el, index) => {
+      el.style.setProperty('--reveal-delay', `${Math.min(index * 80, 480)}ms`);
+      revealObserver.observe(el);
+    });
+
+    const nav = document.querySelector('nav');
+    if (nav) {
+      const updateNavState = () => {
+        nav.classList.toggle('is-scrolled', window.scrollY > 8);
+      };
+      updateNavState();
+      window.addEventListener('scroll', updateNavState, { passive: true });
+    }
+
+    const countUp = (el, target) => {
+      const start = 0;
+      const duration = 1400;
+      const startTime = performance.now();
+      const step = (now) => {
+        const progress = Math.min((now - startTime) / duration, 1);
+        const eased = 1 - Math.pow(1 - progress, 3);
+        el.textContent = Math.round(start + (target - start) * eased).toLocaleString();
+        if (progress < 1) requestAnimationFrame(step);
+      };
+      requestAnimationFrame(step);
+    };
+
+    const countTargets = document.querySelectorAll('[data-count-target]');
+    const countObserver = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (!entry.isIntersecting) return;
+        const el = entry.target;
+        const target = Number(el.dataset.countTarget || 0);
+        countUp(el, target);
+        countObserver.unobserve(el);
+      });
+    }, { threshold: 0.6 });
+
+    countTargets.forEach((el) => countObserver.observe(el));
+  </script>
+  <script src="dropcv-auth.js"></script>
+  <script src="dropcv-upload.js"></script>
+  <script>
+    async function bootstrapDashboard() {
+      const content = document.getElementById('dashboardContent');
+      if (content) content.classList.add('auth-pending');
+
+      // Guard: redirect to login if not logged in; redirect to correct dashboard if wrong plan
+      const user = await waitForCurrentUser();
+      if (!user) {
+        window.location.href = 'login.html';
+        return;
+      }
+      const expectedPlan = 'Basic';
+      if (user.plan !== expectedPlan && user.userType !== 'recruiter') {
+        window.location.href = window.dropCV.getDashboardUrl(user.plan);
+        return;
+      }
+
+      // Personalization: populate sidebar (name/email/avatar/plan badge), welcome heading, URL chip
+      personalizeUI(user);
+
+      if (content) {
+        content.classList.remove('auth-pending');
+        content.classList.add('auth-ready');
+      }
+
+      initDropcvUpload();
+    }
+
+    async function waitForCurrentUser() {
+      if (window.currentUser) {
+        return window.currentUser;
+      }
+
+      for (let attempt = 0; attempt < 40; attempt += 1) {
+        await new Promise(resolve => setTimeout(resolve, 50));
+        if (window.currentUser) {
+          return window.currentUser;
+        }
+      }
+
+      // Fallback for cold loads where the shared auth helper has not populated currentUser yet.
+      return window.dropCV && typeof window.dropCV.initAuth === 'function'
+        ? await window.dropCV.initAuth()
+        : null;
+    }
+
+    // Personalization: populate sidebar (name/email/avatar/plan badge), welcome heading, URL chip
+    function personalizeUI(user) {
+      if (!user) return;
+      var userEl = document.getElementById('user-name');
+      var emailEl = document.getElementById('user-email');
+      var urlEl = document.getElementById('user-url');
+      var avatarEl = document.getElementById('user-avatar');
+      var welcomeEl = document.querySelector('.welcome-heading');
+      var planBadgeEl = document.getElementById('plan-badge');
+      if (userEl) userEl.textContent = user.userName || user.firstName || 'Account';
+      if (emailEl) emailEl.textContent = user.email || '';
+      if (urlEl && user.userURL) urlEl.textContent = user.userURL;
+      if (welcomeEl) welcomeEl.textContent = 'Good to see you, ' + (user.firstName || (user.userName ? user.userName.split(' ')[0] : 'there'));
+      if (planBadgeEl && user.plan) planBadgeEl.textContent = user.plan + ' Plan';
+      if (avatarEl) {
+        var name = user.userName || user.firstName || '';
+        var parts = name.trim().split(/\s+/);
+        if (parts.length === 1 && parts[0]) {
+          avatarEl.textContent = parts[0].charAt(0).toUpperCase();
+        } else if (parts.length > 1) {
+          avatarEl.textContent = (parts[0].charAt(0) + parts[parts.length - 1].charAt(0)).toUpperCase();
+        }
+      }
+    }
+
+    // Navigation
+    const navLinks = document.querySelectorAll('.nav-link');
+    const sections = document.querySelectorAll('.section');
+    const sectionTitle = document.getElementById('section-title');
+
+    navLinks.forEach(link => {
+      link.addEventListener('click', (e) => {
+        e.preventDefault();
+        const targetSection = link.dataset.section;
+
+        // Update nav active state
+        navLinks.forEach(l => l.classList.remove('active'));
+        link.classList.add('active');
+
+        // Show target section
+        sections.forEach(section => {
+          section.classList.remove('active');
+          if (section.id === targetSection) {
+            section.classList.add('active');
+          }
+        });
+
+        // Update title
+        const sectionNames = {
+          'home': 'Home',
+          'site': 'My Site',
+          'analytics': 'Analytics',
+          'domains': 'Domains',
+          'settings': 'Settings'
+        };
+        sectionTitle.textContent = sectionNames[targetSection] || 'Dashboard';
+
+        // Close mobile sidebar
+        if (window.innerWidth <= 768) {
+          document.getElementById('sidebar').classList.remove('active');
+          document.querySelector('.sidebar-overlay').classList.remove('active');
+        }
+      });
+    });
+
+    // Mobile sidebar toggle
+    function toggleSidebar() {
+      const sidebar = document.getElementById('sidebar');
+      const overlay = document.querySelector('.sidebar-overlay');
+      sidebar.classList.toggle('active');
+      overlay.classList.toggle('active');
+    }
+
+    // Copy URL
+    function copyURL() {
+      const urlText = document.getElementById('user-url').textContent;
+      navigator.clipboard.writeText('https://' + urlText).then(() => {
+        alert('URL copied to clipboard!');
+      });
+    }
+
+    // Sign out — delegate to shared auth (cookie-backed session)
+    document.querySelector('.sign-out-link').addEventListener('click', (e) => {
+      e.preventDefault();
+      window.dropCV.signOut();
+    });
+  </script>
+
+  <script>
+    // === drop.cv upload & deploy initialization (Task 2) ===
+    function initDropcvUpload() {
+      function setup() {
+        if (!window.dropcvUpload) return;
+
+        // Inject shared upload styles once
+        window.dropcvUpload.injectStyles();
+
+        // Read user URL from the current in-memory session
+        var userURL = '';
+        if (window.currentUser) {
+          userURL =
+            (window.currentUser.domains && window.currentUser.domains[0] && window.currentUser.domains[0].full_url) ||
+            (window.currentUser.slug ? window.currentUser.slug + '.drop.cv' : '') ||
+            '';
+        }
+
+        var zoneHost = document.getElementById('site-upload-zone');
+        var deployBtn = document.getElementById('site-deploy-btn');
+        var progressContainer = document.getElementById('site-progress-container');
+        var currentStatusBlock = document.getElementById('site-current-status');
+        var currentStatusUrl = document.getElementById('current-status-url');
+        var currentStatusUpdated = document.getElementById('current-status-updated');
+        var currentStatusVisit = document.getElementById('current-status-visit');
+        var currentStatusUpdate = document.getElementById('current-status-update');
+        var upgradeHost = document.getElementById('site-upgrade-card');
+
+        // ---- Build upload zone ----
+        var zone = null;
+        if (zoneHost) {
+          zone = window.dropcvUpload.createUploadZone({
+            accept: '.html,.css,.js,.zip',
+            formatsText: 'Accepted formats: .html .css .js .zip — Max 10MB',
+            onChange: function (file) {
+              if (deployBtn) deployBtn.disabled = !file;
+            }
+          });
+          zoneHost.appendChild(zone.el);
+          zoneHost.appendChild(zone.formatsEl);
+        }
+
+        // ---- Current-deployment-status block helpers ----
+        function showCurrentStatus(dep) {
+          if (!currentStatusBlock) return;
+          if (!dep || !dep.deployed) {
+            currentStatusBlock.style.display = 'none';
+            return;
+          }
+          if (currentStatusUrl) currentStatusUrl.textContent = dep.url || userURL;
+          if (currentStatusUpdated) {
+            currentStatusUpdated.textContent = 'Last updated: ' + (dep.updatedAt || 'just now');
+          }
+          if (currentStatusVisit) {
+            currentStatusVisit.href = userURL ? ('https://' + userURL) : '#';
+          }
+          currentStatusBlock.style.display = '';
+        }
+
+        // "Update site" link → smooth scroll up to the upload zone
+        if (currentStatusUpdate) {
+          currentStatusUpdate.addEventListener('click', function (e) {
+            e.preventDefault();
+            if (zoneHost) zoneHost.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          });
+        }
+
+        // Initial render of current-deployment-status block from localStorage
+        try {
+          var existing = window.dropcvUpload.getDeployment
+            ? window.dropcvUpload.getDeployment()
+            : (JSON.parse(localStorage.getItem('dropCV_deployment') || 'null'));
+          showCurrentStatus(existing);
+        } catch (e) {}
+
+        // ---- Wire deploy button ----
+        if (deployBtn) {
+          deployBtn.addEventListener('click', function () {
+            if (!zone || !zone.getFile()) return;
+            deployBtn.disabled = true;
+            window.dropcvUpload.runDeploySimulation(progressContainer, {
+              url: userURL,
+              method: 'files',
+              title: 'Your site is live!',
+              visitHref: '#',
+              onDone: function (dep) {
+                showCurrentStatus(dep);
+                // Re-enable deploy button so the user can redeploy later
+                deployBtn.disabled = false;
+                // Reset the upload zone so a new file can be picked next time
+                if (zone) zone.reset();
+              }
+            });
+          });
+        }
+
+        // ---- Blurred upgrade card: PDF → site ----
+        if (upgradeHost) {
+          var upgradeCard = window.dropcvUpload.createUpgradeCard(
+            '🔒 Upload a PDF CV and we\'ll convert it into your site',
+            'Available on Pro plan',
+            'Upgrade to Pro →',
+            'signup.html'
+          );
+          upgradeHost.appendChild(upgradeCard);
+        }
+
+        // ---- Home section status card ----
+        var statusHost = document.querySelector('[data-dropcv-status]');
+        if (statusHost) {
+          window.dropcvUpload.renderStatusCard(statusHost, {
+            visitHref: '#',
+            onGoToSite: function () {
+              // Click the My Site nav link to switch sections
+              var navLink = document.querySelector('.nav-link[data-section="site"]');
+              if (navLink) navLink.click();
+            }
+          });
+        }
+      }
+
+      setup();
+    }
+  </script>
+  <script src="dashboard-real-data.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      // Analytics tracking
+      (async function trackVisit() {
+        const slug = getSlugFromContext();
+        if (slug) {
+          await window.dropCVApi.trackPageView(slug);
+        }
+      })();
+
+      function getSlugFromContext() {
+        const host = window.location.hostname;
+        const match = host.match(/^([a-z0-9\-]+)\.drop\.cv$/);
+        return match ? match[1] : null;
+      }
+    });
+
+    document.addEventListener('DOMContentLoaded', bootstrapDashboard, { once: true });
+  </script>
+</body>
+</html>

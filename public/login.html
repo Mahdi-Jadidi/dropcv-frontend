@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="description" content="Sign in to your drop.cv account.">
+  <title>Sign in ??? drop.cv</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%278%27 fill=%27%230F6E56%27/%3E%3Ctext x=%2716%27 y=%2722%27 font-family=%27system-ui,sans-serif%27 font-size=%2716%27 font-weight=%27700%27 fill=%27white%27 text-anchor=%27middle%27%3Ed.%3C/text%3E%3C/svg%3E">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="design-system.css">
+  <script defer src="api/dropcv-api.js"></script>
+  <!-- Shared auth system (loads first so window.dropCV is available to the inline script) -->
+  <script src="dropcv-auth.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: #FAFAFA;
+      color: #0F0F0F;
+      min-height: 100vh;
+      /* Auth bar (48px, injected by dropcv-auth.js) flows at top in normal flow.
+         The login-container below centers its content in the remaining space. */
+      display: block;
+    }
+
+    .login-container {
+      width: 100%;
+      max-width: 440px;
+      margin: 0 auto;
+      padding: 32px;
+      min-height: calc(100vh - 48px);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      font-size: 24px;
+      font-weight: 700;
+      color: #0F0F0F;
+      text-decoration: none;
+      margin-bottom: 32px;
+    }
+
+    .logo-icon {
+      width: 36px;
+      height: 36px;
+      background: #0F6E56;
+      border-radius: 9px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      font-weight: bold;
+      font-size: 20px;
+    }
+
+    .login-card {
+      width: 100%;
+      background: #FFF;
+      border-radius: 16px;
+      padding: 40px;
+      border: 1px solid #ECECEC;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+    }
+
+    .login-card h1 {
+      font-size: 28px;
+      font-weight: 700;
+      margin-bottom: 28px;
+      text-align: center;
+    }
+
+    .google-btn {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      padding: 14px 20px;
+      border: 2px solid #E0E0E0;
+      border-radius: 8px;
+      background: white;
+      color: #0F0F0F;
+      font-size: 16px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: border-color 0.2s;
+      margin-bottom: 20px;
+    }
+
+    .google-btn:hover { border-color: #0F6E56; }
+
+    .divider {
+      display: flex;
+      align-items: center;
+      text-align: center;
+      margin: 24px 0;
+    }
+
+    .divider::before, .divider::after {
+      content: '';
+      flex: 1;
+      border-bottom: 1px solid #E0E0E0;
+    }
+
+    .divider span {
+      padding: 0 16px;
+      font-size: 14px;
+      color: #666666;
+    }
+
+    .form-group { margin-bottom: 20px; }
+
+    .form-group label {
+      display: block;
+      font-size: 14px;
+      font-weight: 500;
+      margin-bottom: 8px;
+    }
+
+    .form-group input {
+      width: 100%;
+      padding: 12px 16px;
+      border: 2px solid #E2E8F0;
+      border-radius: 8px;
+      font-size: 16px;
+      font-family: inherit;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .form-group input:focus { border-color: #0F6E56; }
+
+    .password-input { position: relative; }
+
+    .password-input input { padding-right: 48px; }
+
+    .toggle-password {
+      position: absolute;
+      right: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      font-size: 20px;
+      cursor: pointer;
+      padding: 4px;
+      color: #666666;
+    }
+
+    .submit-btn {
+      width: 100%;
+      padding: 14px 20px;
+      background: #0F6E56;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: opacity 0.2s;
+      margin-bottom: 16px;
+    }
+
+    .submit-btn:hover { opacity: 0.9; }
+
+    .forgot-password {
+      display: block;
+      text-align: center;
+      font-size: 14px;
+      color: #0F6E56;
+      text-decoration: none;
+      margin-bottom: 24px;
+    }
+
+    .signup-prompt {
+      text-align: center;
+      font-size: 14px;
+      color: #666666;
+    }
+
+    .signup-prompt a {
+      color: #0F6E56;
+      text-decoration: none;
+      font-weight: 500;
+    }
+
+    .signup-prompt a:hover { text-decoration: underline; }
+
+    /* Validation styles (spec) */
+    .error-message {
+      font-size: 12px;
+      color: #E53E3E;
+      margin-top: 4px;
+      display: block;
+      min-height: 16px;
+    }
+
+    input.invalid {
+      border-color: #E53E3E !important;
+    }
+
+    /* Mobile: tighter padding so the card fits small screens */
+    @media (max-width: 480px) {
+      .login-container {
+        padding: 20px 16px;
+      }
+      .login-card {
+        padding: 28px 22px;
+      }
+      .login-card h1 {
+        font-size: 24px;
+        margin-bottom: 24px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="login-container">
+    <a href="index.html" class="logo">
+      <span class="logo-icon">d</span>
+      drop.cv
+    </a>
+    <div class="login-card">
+      <h1>Welcome back</h1>
+
+      <button class="google-btn" id="google-btn">
+        <svg width="20" height="20" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+        Continue with Google
+      </button>
+
+      <div class="divider">
+        <span>or continue with email</span>
+      </div>
+
+      <div class="form-group">
+        <label>Email</label>
+        <input type="email" id="email" placeholder="you@example.com" autocomplete="email">
+        <span class="error-message" id="email-error"></span>
+      </div>
+
+      <div class="form-group">
+        <label>Password</label>
+        <div class="password-input">
+          <input type="password" id="password" placeholder="••••••••" autocomplete="current-password">
+          <button type="button" class="toggle-password" id="toggle-password">👁️</button>
+        </div>
+        <span class="error-message" id="password-error"></span>
+      </div>
+
+      <button class="submit-btn" id="sign-in-btn">Sign in →</button>
+      <p id="loginError"
+         style="color:#E24B4A;font-size:13px;
+         margin-top:8px;text-align:center;
+         min-height:20px"></p>
+
+      <a href="#" class="forgot-password">Forgot password?</a>
+
+      <div class="divider"></div>
+
+      <p class="signup-prompt">
+        Don't have an account? <a href="signup.html">Sign up →</a>
+      </p>
+    </div>
+  </div>
+
+  <script>
+    const revealTargets = document.querySelectorAll('.reveal, .reveal-left, .reveal-scale, .section-stagger');
+    const revealObserver = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('is-visible');
+          revealObserver.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.18, rootMargin: '0px 0px -8% 0px' });
+
+    revealTargets.forEach((el, index) => {
+      el.style.setProperty('--reveal-delay', `${Math.min(index * 80, 480)}ms`);
+      revealObserver.observe(el);
+    });
+
+    const nav = document.querySelector('nav');
+    if (nav) {
+      const updateNavState = () => {
+        nav.classList.toggle('is-scrolled', window.scrollY > 8);
+      };
+      updateNavState();
+      window.addEventListener('scroll', updateNavState, { passive: true });
+    }
+
+    const countUp = (el, target) => {
+      const start = 0;
+      const duration = 1400;
+      const startTime = performance.now();
+      const step = (now) => {
+        const progress = Math.min((now - startTime) / duration, 1);
+        const eased = 1 - Math.pow(1 - progress, 3);
+        el.textContent = Math.round(start + (target - start) * eased).toLocaleString();
+        if (progress < 1) requestAnimationFrame(step);
+      };
+      requestAnimationFrame(step);
+    };
+
+    const countTargets = document.querySelectorAll('[data-count-target]');
+    const countObserver = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (!entry.isIntersecting) return;
+        const el = entry.target;
+        const target = Number(el.dataset.countTarget || 0);
+        countUp(el, target);
+        countObserver.unobserve(el);
+      });
+    }, { threshold: 0.6 });
+
+    countTargets.forEach((el) => countObserver.observe(el));
+  </script>
+  <script>
+    // ============================================================
+    // AUTH GUARD — redirect logged-in users to their dashboard.
+    // Runs immediately using the backend cookie session.
+    // ============================================================
+    (async function authGuard() {
+      try {
+        var user = await window.dropCVApi.getCurrentUser();
+        if (user) {
+          window.currentUser = user;
+          window.location.href = window.dropCV.getDashboardUrl(user.plan);
+        }
+      } catch (e) {}
+    })();
+
+    // ============================================================
+    // VALIDATION HELPERS
+    // ============================================================
+    function validateEmail(email) {
+      return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+    }
+
+    function showError(fieldId, message) {
+      var input = document.getElementById(fieldId);
+      var errorEl = document.getElementById(fieldId + '-error');
+      if (input) {
+        input.classList.add('invalid');
+      }
+      if (errorEl) errorEl.textContent = message;
+    }
+
+    function clearError(fieldId) {
+      var input = document.getElementById(fieldId);
+      var errorEl = document.getElementById(fieldId + '-error');
+      if (input) {
+        input.classList.remove('invalid');
+      }
+      if (errorEl) errorEl.textContent = '';
+    }
+
+    // ============================================================
+    // DOM (available now — script is at end of body)
+    // ============================================================
+    var emailInput = document.getElementById('email');
+    var passwordInput = document.getElementById('password');
+    var toggleBtn = document.getElementById('toggle-password');
+    var signInBtn = document.getElementById('sign-in-btn');
+    var googleBtn = document.getElementById('google-btn');
+
+    // Password show/hide toggle
+    toggleBtn.addEventListener('click', function () {
+      var type = passwordInput.type === 'password' ? 'text' : 'password';
+      passwordInput.type = type;
+      toggleBtn.textContent = type === 'password' ? '👁️' : '🙈';
+    });
+
+    // Clear errors when typing
+    emailInput.addEventListener('input', function () { clearError('email'); });
+    passwordInput.addEventListener('input', function () { clearError('password'); });
+
+    // Enter key submits
+    [emailInput, passwordInput].forEach(function (input) {
+      input.addEventListener('keypress', function (e) {
+        if (e.key === 'Enter') signInBtn.click();
+      });
+    });
+
+    // ============================================================
+    // SIGN IN HANDLER
+    // ============================================================
+    async function handleLogin(e) {
+      if (e) e.preventDefault();
+
+      var email = emailInput.value.trim();
+      var password = passwordInput.value;
+      var btn = document.getElementById('sign-in-btn');
+      var errorEl = document.getElementById('loginError');
+
+      if (errorEl) errorEl.textContent = '';
+
+      if (!email || !password) {
+        if (errorEl) errorEl.textContent = 'Please enter your email and password';
+        return;
+      }
+
+      if (!validateEmail(email)) {
+        showError('email', 'Please enter a valid email address.');
+        return;
+      }
+
+      if (btn) {
+        btn.disabled = true;
+        btn.textContent = 'Signing in...';
+      }
+
+      var response = await window.dropCVApi.login(email, password);
+
+      if (response.ok && response.data?.user) {
+        var user = response.data.user;
+        window.currentUser = user;
+        window.location.href = window.dropCV.getDashboardUrl(user.plan);
+        return;
+      }
+
+      if (errorEl) {
+        errorEl.textContent = response.error || 'Invalid email or password';
+      }
+      if (btn) {
+        btn.disabled = false;
+        btn.textContent = 'Sign in →';
+      }
+    }
+
+    signInBtn.addEventListener('click', handleLogin);
+
+    // Google button placeholder (advances to plan selection in a real OAuth flow)
+    googleBtn.addEventListener('click', function () {
+      // No real OAuth — just redirect to signup for now
+      window.location.href = 'signup.html';
+    });
+  </script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      // Analytics tracking
+      (async function trackVisit() {
+        const slug = getSlugFromContext();
+        if (slug) {
+          await window.dropCVApi.trackPageView(slug);
+        }
+      })();
+
+      function getSlugFromContext() {
+        const host = window.location.hostname;
+        const match = host.match(/^([a-z0-9\-]+)\.drop\.cv$/);
+        return match ? match[1] : null;
+      }
+    });
+  </script>
+</body>
+</html>

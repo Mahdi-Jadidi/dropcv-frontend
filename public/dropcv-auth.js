@@ -1,0 +1,200 @@
+/*
+ * drop.cv shared auth helper
+ * Reads login state from the backend via httpOnly JWT cookies.
+ */
+(function () {
+  'use strict';
+
+  function getDashboardUrl(plan) {
+    switch (plan) {
+      case 'Basic':
+        return 'dashboard-basic.html';
+      case 'Pro':
+        return 'dashboard-pro.html';
+      case 'Premium':
+        return 'dashboard-premium.html';
+      case 'Recruiter':
+        return 'dashboard-recruiter.html';
+      default:
+        return 'dashboard-pro.html';
+    }
+  }
+
+  function getInitials(first, last) {
+    return ((first && first[0]) || '') + ((last && last[0]) || '');
+  }
+
+  function getUser() {
+    return window.currentUser || null;
+  }
+
+  async function handleSignOut() {
+    await window.dropCVApi.logout();
+    window.currentUser = null;
+    window.location.href = 'index.html';
+  }
+
+  function setTextIfPresent(id, value) {
+    var el = document.getElementById(id);
+    if (el && value !== undefined && value !== null) {
+      el.textContent = value;
+    }
+  }
+
+  function renderLegacyNav(user) {
+    var container = document.getElementById('nav-auth-container');
+    if (!container) return;
+
+    container.innerHTML = '';
+
+    if (!user) {
+      var loginLink = document.createElement('a');
+      loginLink.href = 'login.html';
+      loginLink.textContent = 'Log in';
+
+      var signupLink = document.createElement('a');
+      signupLink.href = 'signup.html';
+      signupLink.textContent = 'Sign up';
+
+      container.appendChild(loginLink);
+      container.appendChild(signupLink);
+      return;
+    }
+
+    var avatar = document.createElement('div');
+    avatar.textContent = getInitials(user.firstName || '', user.lastName || '');
+
+    var dashboardLink = document.createElement('a');
+    dashboardLink.href = getDashboardUrl(user.plan);
+    dashboardLink.textContent = 'Dashboard';
+
+    var signoutLink = document.createElement('a');
+    signoutLink.href = '#';
+    signoutLink.textContent = 'Sign out';
+    signoutLink.addEventListener('click', function (event) {
+      event.preventDefault();
+      handleSignOut();
+    });
+
+    container.appendChild(avatar);
+    container.appendChild(dashboardLink);
+    container.appendChild(signoutLink);
+  }
+
+  function renderFloatingDashboard(user) {
+    var floatingDashboard =
+      document.getElementById('floatingDashboard') ||
+      document.getElementById('floating-dashboard-btn');
+
+    if (!floatingDashboard) return;
+
+    if (user) {
+      floatingDashboard.style.display = 'flex';
+      floatingDashboard.href = getDashboardUrl(user.plan);
+    } else {
+      floatingDashboard.style.display = 'none';
+    }
+  }
+
+  async function initAuth() {
+    var user = await window.dropCVApi.getCurrentUser();
+    window.currentUser = user;
+
+    var navLogin = document.getElementById('navLogin');
+    var navSignup = document.getElementById('navSignup');
+    var navAvatar = document.getElementById('navAvatar');
+    var navDashboard = document.getElementById('navDashboard');
+    var navSignout = document.getElementById('navSignout');
+    var floatingDashboard =
+      document.getElementById('floatingDashboard') ||
+      document.getElementById('floating-dashboard-btn');
+
+    if (navLogin) navLogin.style.display = user ? 'none' : 'block';
+    if (navSignup) navSignup.style.display = user ? 'none' : 'block';
+    if (navAvatar) {
+      if (user) {
+        navAvatar.style.display = 'flex';
+        navAvatar.textContent = getInitials(user.firstName, user.lastName || '');
+      } else {
+        navAvatar.style.display = 'none';
+      }
+    }
+    if (navDashboard) {
+      if (user) {
+        navDashboard.style.display = 'block';
+        navDashboard.href = getDashboardUrl(user.plan);
+      } else {
+        navDashboard.style.display = 'none';
+      }
+    }
+    if (navSignout) {
+      navSignout.style.display = user ? 'block' : 'none';
+      navSignout.onclick = user ? handleSignOut : null;
+    }
+    if (floatingDashboard) {
+      floatingDashboard.style.display = user ? 'flex' : 'none';
+      if (user) {
+        floatingDashboard.href = getDashboardUrl(user.plan);
+      }
+    }
+
+    setTextIfPresent('welcomeName', user ? (user.firstName || user.userName || '') : '');
+    setTextIfPresent(
+      'userUrlChip',
+      user ? (user.domains?.[0]?.full_url || (user.slug ? `${user.slug}.drop.cv` : '')) : '',
+    );
+    setTextIfPresent('planBadge', user ? `${user.plan} Plan` : '');
+    setTextIfPresent('sidebarName', user ? (user.profile?.fullName || user.profile?.full_name || user.email || '') : '');
+    setTextIfPresent('sidebarEmail', user ? user.email : '');
+    setTextIfPresent('user-name', user ? (user.profile?.companyName || user.profile?.company_name || user.firstName || user.email || '') : '');
+    setTextIfPresent('user-email', user ? user.email : '');
+    setTextIfPresent('user-url', user ? (user.domains?.[0]?.full_url || (user.slug ? `${user.slug}.drop.cv` : '')) : '');
+    setTextIfPresent('plan-badge', user ? `${user.plan} Plan` : '');
+    setTextIfPresent('company-name-display', user ? (user.profile?.companyName || user.profile?.company_name || user.email || '') : '');
+
+    var avatarEl = document.getElementById('user-avatar');
+    if (avatarEl) {
+      if (user) {
+        var initials = getInitials(user.firstName || user.userName || '', user.lastName || '');
+        if (!initials && user.profile?.fullName) {
+          var parts = String(user.profile.fullName).trim().split(/\s+/);
+          initials = getInitials(parts[0] || '', parts[parts.length - 1] || '');
+        }
+        avatarEl.textContent = initials || '?';
+      } else {
+        avatarEl.textContent = '';
+      }
+    }
+
+    var welcomeEl = document.querySelector('.welcome-heading');
+    if (welcomeEl) {
+      if (user) {
+        welcomeEl.textContent = 'Welcome back, ' + (user.firstName || user.userName || 'there');
+      } else {
+        welcomeEl.textContent = welcomeEl.textContent;
+      }
+    }
+
+    renderLegacyNav(user);
+    renderFloatingDashboard(user);
+
+    return user;
+  }
+
+  window.dropCV = {
+    initAuth: initAuth,
+    getUser: getUser,
+    getDashboardUrl: getDashboardUrl,
+    getInitials: getInitials,
+    handleSignOut: handleSignOut,
+    signOut: handleSignOut,
+  };
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', function () {
+      initAuth();
+    });
+  } else {
+    initAuth();
+  }
+})();

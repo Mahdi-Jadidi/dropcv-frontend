@@ -78,7 +78,16 @@ module.exports = async function proxyHandler(req, res) {
     return;
   }
 
-  const targetUrl = new URL(req.url, BACKEND_PROXY_URL);
+  const incomingUrl = new URL(req.url, 'http://localhost');
+  let pathname = incomingUrl.pathname;
+
+  if (pathname === '/proxy') {
+    pathname = '/';
+  } else if (pathname.startsWith('/proxy/')) {
+    pathname = pathname.slice('/proxy'.length);
+  }
+
+  const targetUrl = new URL(pathname + incomingUrl.search, BACKEND_PROXY_URL);
   const requestInit = {
     method: req.method,
     headers: filterRequestHeaders(req.headers),

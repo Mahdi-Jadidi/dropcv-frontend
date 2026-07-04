@@ -6,7 +6,7 @@ const appRoot = dirname(fileURLToPath(import.meta.url));
 const isVercel = process.env.VERCEL === "1";
 
 const nextConfig: NextConfig = {
-  output: isVercel ? "export" : "standalone",
+  output: "standalone",
   outputFileTracingRoot: appRoot,
   /* config options here */
   typescript: {

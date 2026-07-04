@@ -1,6 +1,6 @@
 /*
  * drop.cv — Shared upload & deployment system for dashboards
- * Included on dashboard-basic, dashboard-pro, dashboard-premium.
+ * Included on dashboard-standard and dashboard-premium.
  *
  * Provides reusable building blocks for the "My Site" section:
  *   - createUploadZone(config) → returns a DOM element with drag/drop,
@@ -19,6 +19,15 @@
   'use strict';
 
   var STORAGE_KEY = 'dropCV_deployment';
+
+  function escapeHtml(value) {
+    return String(value == null ? '' : value)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+  }
 
   // ---------- Shared styles (injected once) ----------
   var STYLE_ID = 'dropcv-upload-styles';
@@ -82,6 +91,18 @@
       '.dropcv-file-check svg { width: 20px; height: 20px; }',
       '.dropcv-file-name { font-weight: 600; color: #0F0F0F; }',
       '.dropcv-file-size { font-size: 13px; color: #666; }',
+      '.dropcv-file-list {',
+      '  display: none; list-style: none; margin: 10px 0 0; padding: 0;',
+      '  text-align: left; max-width: 520px; width: 100%;',
+      '}',
+      '.dropcv-upload-zone.has-file.has-multiple .dropcv-file-list { display: block; }',
+      '.dropcv-file-list-item {',
+      '  display: flex; justify-content: space-between; gap: 12px;',
+      '  padding: 8px 0; border-top: 1px solid #E5E7EB; font-size: 13px; color: #52616b;',
+      '}',
+      '.dropcv-file-list-item:first-child { border-top: 0; }',
+      '.dropcv-file-list-path { font-weight: 600; color: #0F0F0F; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }',
+      '.dropcv-file-list-size { flex-shrink: 0; color: #6B7280; }',
       '.dropcv-remove-link {',
       '  color: #E53E3E; cursor: pointer; font-size: 13px;',
       '  text-decoration: underline; background: none; border: none;',
@@ -331,13 +352,15 @@
   /**
    * config = {
    *   accept: ".html,.css,.js,.zip",
+   *   multiple: true,
    *   formatsText: "Accepted formats: .html .css .js .zip — Max 10MB",
-   *   onChange: function(file | null) {...}  // callback when file selected/removed
+   *   onChange: function(file | file[] | null) {...}  // callback when file(s) selected/removed
    * }
-   * Returns { el, getFile, reset, setFile }
+   * Returns { el, getFile, getFiles, reset, setFile, setFiles }
    */
   function createUploadZone(config) {
-    var state = { file: null };
+    var allowMultiple = Boolean(config && config.multiple);
+    var state = { files: [] };
 
     var el = document.createElement('div');
     el.className = 'dropcv-upload-zone';
@@ -352,6 +375,7 @@
           '<div>' +
             '<div class="dropcv-file-name"></div>' +
             '<div class="dropcv-file-size"></div>' +
+            '<ul class="dropcv-file-list"></ul>' +
           '</div>' +
           '<button class="dropcv-remove-link" type="button">Remove file</button>' +
         '</div>' +
@@ -360,20 +384,64 @@
     var input = document.createElement('input');
     input.type = 'file';
     input.accept = config.accept || '';
+    input.multiple = allowMultiple;
     input.style.display = 'none';
     el.appendChild(input);
 
-    function setFile(file) {
-      state.file = file || null;
-      if (file) {
+    function getDisplaySize(files) {
+      var total = files.reduce(function (sum, file) { return sum + (file && file.size ? file.size : 0); }, 0);
+      return formatSize(total);
+    }
+
+    function renderFiles() {
+      var files = state.files || [];
+
+      if (files.length > 0) {
         el.classList.add('has-file');
-        el.querySelector('.dropcv-file-name').textContent = file.name;
-        el.querySelector('.dropcv-file-size').textContent = formatSize(file.size);
+        el.classList.toggle('has-multiple', files.length > 1);
+        el.querySelector('.dropcv-file-name').textContent = allowMultiple && files.length > 1
+          ? files.length + ' files selected'
+          : files[0].name;
+        el.querySelector('.dropcv-file-size').textContent = allowMultiple && files.length > 1
+          ? getDisplaySize(files) + ' total'
+          : formatSize(files[0].size);
+
+        var listEl = el.querySelector('.dropcv-file-list');
+        if (allowMultiple && files.length > 1) {
+          listEl.innerHTML = files.map(function (file) {
+            return '<li class="dropcv-file-list-item"><span class="dropcv-file-list-path">' +
+              escapeHtml(file.name) +
+              '</span><span class="dropcv-file-list-size">' +
+              escapeHtml(formatSize(file.size)) +
+              '</span></li>';
+          }).join('');
+        } else {
+          listEl.innerHTML = '';
+        }
+
+        el.querySelector('.dropcv-remove-link').textContent = files.length > 1 ? 'Remove files' : 'Remove file';
       } else {
         el.classList.remove('has-file');
+        el.classList.remove('has-multiple');
         input.value = '';
+        el.querySelector('.dropcv-file-name').textContent = '';
+        el.querySelector('.dropcv-file-size').textContent = '';
+        el.querySelector('.dropcv-file-list').innerHTML = '';
+        el.querySelector('.dropcv-remove-link').textContent = 'Remove file';
       }
-      if (typeof config.onChange === 'function') config.onChange(state.file);
+    }
+
+    function setFiles(files) {
+      var nextFiles = Array.isArray(files) ? files.filter(Boolean) : [];
+      state.files = allowMultiple ? nextFiles : nextFiles.slice(0, 1);
+      renderFiles();
+      if (typeof config.onChange === 'function') {
+        config.onChange(allowMultiple ? state.files.slice() : state.files[0] || null, state.files.slice());
+      }
+    }
+
+    function setFile(file) {
+      setFiles(file ? [file] : []);
     }
 
     // Click to browse (but not when clicking the remove link)
@@ -382,12 +450,16 @@
       input.click();
     });
     input.addEventListener('change', function () {
-      if (input.files && input.files[0]) setFile(input.files[0]);
+      if (input.files && input.files.length) {
+        setFiles(Array.from(input.files));
+      } else {
+        setFiles([]);
+      }
     });
     // Drag and drop
     el.addEventListener('dragover', function (e) {
       e.preventDefault();
-      if (!state.file) el.classList.add('dragover');
+      if (!state.files.length) el.classList.add('dragover');
     });
     el.addEventListener('dragleave', function () {
       el.classList.remove('dragover');
@@ -396,13 +468,13 @@
       e.preventDefault();
       el.classList.remove('dragover');
       if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0]) {
-        setFile(e.dataTransfer.files[0]);
+        setFiles(Array.from(e.dataTransfer.files));
       }
     });
     // Remove
     el.querySelector('.dropcv-remove-link').addEventListener('click', function (e) {
       e.stopPropagation();
-      setFile(null);
+      setFiles([]);
     });
 
     var formatsEl = document.createElement('div');
@@ -413,9 +485,12 @@
     return {
       el: el,
       formatsEl: formatsEl,
-      getFile: function () { return state.file; },
-      reset: function () { setFile(null); },
+      getFile: function () { return state.files[0] || null; },
+      getFiles: function () { return state.files.slice(); },
+      reset: function () { setFiles([]); },
       setFile: setFile
+      ,
+      setFiles: setFiles
     };
   }
 
@@ -434,6 +509,10 @@
   function runDeploySimulation(container, opts) {
     opts = opts || {};
     container.innerHTML = '';
+    var uploadDelay = 240;
+    var deployDelay = 180;
+    var liveDelay = 120;
+    var settleDelay = 120;
     var wrap = document.createElement('div');
     wrap.className = 'dropcv-progress-wrap';
     var label = document.createElement('div');
@@ -453,14 +532,14 @@
       if (text) label.textContent = text;
     }
 
-    // Step 1: Upload (40%, 1s)
+    // Step 1: Upload (brief confirmation)
     setFill(0, 'Uploading files...');
     setTimeout(function () {
       setFill(40, 'Deploying to your subdomain...');
-      // Step 2: Deploy (80%, 1s)
+      // Step 2: Deploy (brief confirmation)
       setTimeout(function () {
         setFill(80, 'Going live...');
-        // Step 3: Live (100%, 0.5s)
+        // Step 3: Live (brief confirmation)
         setTimeout(function () {
           setFill(100, 'Going live...');
           setTimeout(function () {
@@ -481,10 +560,10 @@
             if (typeof opts.onDone === 'function') opts.onDone(dep);
             // Refresh any status cards on the page
             refreshAllStatusCards();
-          }, 500);
-        }, 500);
-      }, 1000);
-    }, 1000);
+          }, settleDelay);
+        }, liveDelay);
+      }, deployDelay);
+    }, uploadDelay);
   }
 
   // ---------- Pipeline (sequential spinner→check steps) ----------
@@ -672,6 +751,9 @@
       });
       bar.appendChild(btn);
     });
+    if (tabs.length && typeof onTab === 'function') {
+      onTab(tabs[0].id);
+    }
     return {
       el: bar,
       showTab: function (id) {
@@ -687,11 +769,12 @@
   function createUpgradeCard(heading, body, btnText, btnHref) {
     var card = document.createElement('div');
     card.className = 'dropcv-upgrade-card';
+    var safeHref = escapeHtml(btnHref || 'signup.html');
     card.innerHTML =
       '<div class="dropcv-upgrade-card-inner">' +
-        '<h3>' + heading + '</h3>' +
-        '<p>' + body + '</p>' +
-        '<a class="dropcv-btn-teal" href="' + (btnHref || 'signup.html') + '">' + btnText + '</a>' +
+        '<h3>' + escapeHtml(heading) + '</h3>' +
+        '<p>' + escapeHtml(body) + '</p>' +
+        '<a class="dropcv-btn-teal" href="' + safeHref + '">' + escapeHtml(btnText) + '</a>' +
       '</div>';
     return card;
   }

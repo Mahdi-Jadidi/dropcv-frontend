@@ -6,18 +6,12 @@
   'use strict';
 
   function getDashboardUrl(plan) {
-    switch (plan) {
-      case 'Basic':
-        return 'dashboard-basic.html';
-      case 'Pro':
-        return 'dashboard-pro.html';
-      case 'Premium':
-        return 'dashboard-premium.html';
-      case 'Recruiter':
-        return 'dashboard-recruiter.html';
-      default:
-        return 'dashboard-pro.html';
-    }
+    var map = {
+      Standard: 'dashboard-standard.html',
+      Premium: 'dashboard-premium.html',
+    };
+
+    return map[plan] || 'dashboard-standard.html';
   }
 
   function getInitials(first, last) {

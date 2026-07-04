@@ -3,9 +3,10 @@ import { dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const appRoot = dirname(fileURLToPath(import.meta.url));
+const isVercel = process.env.VERCEL === "1";
 
 const nextConfig: NextConfig = {
-  output: "standalone",
+  output: isVercel ? "export" : "standalone",
   outputFileTracingRoot: appRoot,
   /* config options here */
   typescript: {

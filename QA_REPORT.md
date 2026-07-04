@@ -1,47 +1,50 @@
 # QA Report
 
-Date: 2026-06-24
+Date: 2026-07-02
 
 ## Scope
 
-Verified the main frontend funnel on the static site:
+Verified the release surface for the public funnel and the dashboard/policy surfaces:
 
 - `index.html`
 - `signup.html`
-- `dashboard-basic.html`
-- `discovery.html`
+- `login.html`
+- `dashboard-standard.html`
+- `dashboard-premium.html`
+- `payment-result.html`
 - `privacy.html`
 - `terms.html`
-- `design-system.css`
+- `contact.html`
+- `cookies.html`
+- `dashboard-real-data.js`
+- `dropcv-upload.js`
 - `api/dropcv-api.js`
 
 ## Results
 
 | Area | Status | Notes |
 |---|---|---|
-| Landing page flow | Passed | Reordered the funnel to keep a single visible closing CTA path and moved the cinematic block to the end of the main content. |
-| Pricing copy | Passed | Updated the Basic CTA to `Start free — no card needed →`. |
-| Footer links | Passed | Added `privacy.html` and `terms.html` to remove footer 404s. |
-| Local assets | Passed | Static scan found no missing local `href`/`src` targets in the core pages. |
-| Served routes | Passed | Local server returned HTTP 200 for the key routes and static assets. |
-| Reduced motion support | Passed | Existing reduced-motion rules remain in place in the shared CSS and landing page. |
-| Browser automation | Passed | Real browser QA was completed in the in-app browser with mobile viewport checks, signup completion, dashboard verification, and discovery interaction checks. |
+| Landing page flow | Passed | Funnel remains focused on a single main CTA path and the footer now exposes legal/support links. |
+| Signup/login UX | Passed | Added visible footer access to contact, cookies, privacy, and terms from the authentication surfaces. |
+| Legal coverage | Passed | Added standalone contact and cookie policy pages and expanded privacy/terms copy to match actual data handling. |
+| Security hardening | Passed | Escaped dashboard analytics and upload error renderers to remove stored/reflected HTML injection risk. |
+| Analytics privacy | Passed | Geo lookup is now optional and constrained to trusted http(s) endpoints through configuration. |
+| Build validation | Passed | Frontend production build completed successfully. |
+| Backend tests | Passed | Backend suite completed with `66/66` passing. |
 
 ## Issues Found And Fixed
 
-1. The landing page had duplicate end-of-funnel CTAs and the cinematic sequence was positioned before pricing/features in the intended flow.
-2. The footer linked to missing `privacy.html` and `terms.html` pages.
-3. The bottom auth block could reappear as a second CTA, which broke the single-conversion-path goal.
-4. Discovery depended on an API route that is not available in the local static setup, which left the page stuck on the error state until a client-side fallback was added.
+1. The public site had privacy and terms pages, but no standalone contact or cookie policy page.
+2. The legal copy did not fully describe the actual cookie/local-storage behavior used by the product.
+3. Dashboard analytics rows and upload failure states rendered unescaped server-controlled text into `innerHTML`.
+4. The analytics geo lookup had an insecure hardcoded third-party default, so it was replaced with an optional config-driven endpoint.
+5. The earlier QA report was stale and has been refreshed to match the current release.
+6. The homepage hero and bottom CTA now use the more explicit "Upload your CV — go live free" copy while keeping the 3-day trial messaging intact.
 
 ## Verification Notes
 
-- Core routes returned `200` from the local static server.
-- Google Fonts preconnect and stylesheet links are present on the main pages.
-- Shared design tokens remain on `design-system.css`.
-- Reduced-motion handling is still present on the landing page and shared CSS.
-- Second-pass mobile polish tightened the landing hero search, final CTA spacing, signup gutters, and floating button safe-area offsets.
-- Browser-backed mobile checks confirmed discovery spacing improved and the dashboard mobile shell now has tighter paddings/gutters.
-- The signup flow now completes in the browser and lands on the dashboard route.
-- Discovery search now falls back to local data when the discovery API is unavailable in the local environment.
-- Mobile homepage now includes a compact pricing/features preview in the hero so the key sections are visible without a long scroll.
+- `npm run build` passed after the release changes.
+- `npm test` passed with all backend suites green.
+- Public pages now link to `contact.html`, `cookies.html`, `privacy.html`, and `terms.html`.
+- `privacy.html`, `terms.html`, `contact.html`, and `cookies.html` now provide the minimum policy/compliance details for support, cookies, data use, and user contact.
+- The in-app browser was available for local homepage and signup verification, including English/Persian toggling and a 375px responsive check. The full upload/payment end-to-end flow still needs a separate pass with file-upload and ZarinPal credentials exercised from the browser UI.

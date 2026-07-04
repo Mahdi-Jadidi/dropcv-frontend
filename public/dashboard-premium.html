@@ -6,13 +6,14 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="robots" content="noindex, nofollow">
   <meta name="description" content="Manage your drop.cv resume site.">
-  <title>Dashboard ??? drop.cv</title>
+  <title>Dashboard - drop.cv</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%278%27 fill=%27%230F6E56%27/%3E%3Ctext x=%2716%27 y=%2722%27 font-family=%27system-ui,sans-serif%27 font-size=%2716%27 font-weight=%27700%27 fill=%27white%27 text-anchor=%27middle%27%3Ed.%3C/text%3E%3C/svg%3E">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="design-system.css">
-  <script defer src="api/dropcv-api.js"></script>
+  <script src="site-config.js"></script>
+  <script src="api/dropcv-api.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
     * {
@@ -1202,8 +1203,8 @@
         <div class="user-info">
           <div class="user-avatar" id="user-avatar">MJ</div>
           <div class="user-details">
-            <div class="user-name" id="user-name">Mahdi Jadidi</div>
-            <div class="user-email" id="user-email">mahdi@example.com</div>
+            <div class="user-name" id="user-name">Loading...</div>
+            <div class="user-email" id="user-email"></div>
           </div>
         </div>
         <a href="#" class="sign-out-link">Sign out</a>
@@ -1238,8 +1239,9 @@
       <div class="content-area">
         <!-- Home Section -->
         <section class="section active" id="home">
-          <h1 class="welcome-heading">Good to see you, Mahdi.</h1>
+          <h1 class="welcome-heading">Welcome back.</h1>
           <p class="subheading">Here's what's happening with your portfolio</p>
+          <div id="dashboard-motion-home" class="dashboard-motion-root" data-dashboard-motion="home"></div>
 
           <!-- URL Section -->
           <div class="url-section">
@@ -1248,7 +1250,7 @@
                 <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
                 <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
               </svg>
-              <span id="user-url">mahdijadidi.drop.cv</span>
+              <span id="user-url">Loading...</span>
             </div>
             <button class="btn btn-outline" onclick="copyURL()">Copy</button>
           </div>
@@ -1257,39 +1259,10 @@
           <div data-dropcv-status></div>
 
           <!-- Stats Grid -->
-          <div class="stats-grid">
-            <div class="stat-card">
-              <div class="stat-label">Total views</div>
-              <div class="stat-value">1,247</div>
-              <div class="stat-trend">+12% this week</div>
-            </div>
-            <div class="stat-card">
-              <div class="stat-label">Profile clicks</div>
-              <div class="stat-value">342</div>
-              <div class="stat-trend">+8% this week</div>
-            </div>
-            <div class="stat-card">
-              <div class="stat-label">Countries</div>
-              <div class="stat-value">24</div>
-              <div class="stat-trend">+3 this week</div>
-            </div>
-            <div class="stat-card">
-              <div class="stat-label">Avg duration</div>
-              <div class="stat-value">2:34</div>
-              <div class="stat-trend">+15s this week</div>
-            </div>
-          </div>
+          <div class="stats-grid"><div class="stat-card"><div class="stat-label">Total views</div><div class="stat-value" id="totalViews">-</div><div class="stat-trend">All recorded visits</div></div><div class="stat-card"><div class="stat-label">Views this week</div><div class="stat-value" id="viewsThisWeek">-</div><div class="stat-trend">Last 7 days</div></div><div class="stat-card"><div class="stat-label">Unique visitors</div><div class="stat-value" id="uniqueVisitors">-</div><div class="stat-trend">Privacy-safe count</div></div><div class="stat-card"><div class="stat-label">Best day</div><div class="stat-value" id="bestDay">-</div><div class="stat-trend">Your highest-traffic date</div></div></div>
 
           <!-- AI Summary Card -->
-          <div class="ai-summary">
-            <div class="ai-summary-header">
-              <h3>✨ AI Summary</h3>
-              <span class="ai-badge">Premium</span>
-            </div>
-            <p style="font-size: 14px; color: var(--color-gray-text); line-height: 1.6;">
-              Your portfolio is performing exceptionally well this week! You've seen a 12% increase in views, with most traffic coming from LinkedIn. Consider adding more case studies to keep visitors engaged longer.
-            </p>
-          </div>
+          <div class="ai-summary" id="aiSummary"><div class="ai-summary-header"><h3>Traffic insights</h3><span class="ai-badge">Premium</span></div><p>We'll show you insights once you have a few visits. Share your link to get started!</p></div>
 
           <!-- Quick Actions -->
           <div class="quick-actions">
@@ -1327,48 +1300,14 @@
           </div>
 
           <!-- Recent Activity -->
-          <div class="activity-feed">
-            <h3>Recent activity</h3>
-            <div class="activity-item">
-              <span class="country-flag">🇺🇸</span>
-              <div class="activity-details">
-                <div class="activity-location">San Francisco, USA</div>
-                <div class="activity-time">2 minutes ago</div>
-              </div>
-              <div class="referrer-icon">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
-                Direct
-              </div>
-            </div>
-            <div class="activity-item">
-              <span class="country-flag">🇬🇧</span>
-              <div class="activity-details">
-                <div class="activity-location">London, UK</div>
-                <div class="activity-time">15 minutes ago</div>
-              </div>
-              <div class="referrer-icon">
-                <svg viewBox="0 0 24 24" fill="#0077B5"><path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"/></svg>
-                LinkedIn
-              </div>
-            </div>
-            <div class="activity-item">
-              <span class="country-flag">🇩🇪</span>
-              <div class="activity-details">
-                <div class="activity-location">Berlin, Germany</div>
-                <div class="activity-time">1 hour ago</div>
-              </div>
-              <div class="referrer-icon">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
-                Direct
-              </div>
-            </div>
-          </div>
+          <div class="activity-feed" id="recentActivity"><h3>Recent activity</h3><div class="empty-state-sm"><p>No visits yet. Share your link to get started.</p></div></div>
         </section>
 
         <!-- My Site Section -->
         <section class="section" id="site">
           <h1>My Site</h1>
           <p class="subheading">Manage your live resume site</p>
+          <div id="dashboard-motion-site" class="dashboard-motion-root" data-dashboard-motion="site"></div>
           <div id="site-tabs-root"></div>
         </section>
 
@@ -1393,77 +1332,13 @@
                 <th>Percentage</th>
               </tr>
             </thead>
-            <tbody>
-              <tr>
-                <td>LinkedIn</td>
-                <td>456</td>
-                <td>37%</td>
-              </tr>
-              <tr>
-                <td>Direct</td>
-                <td>387</td>
-                <td>31%</td>
-              </tr>
-              <tr>
-                <td>Google</td>
-                <td>234</td>
-                <td>19%</td>
-              </tr>
-              <tr>
-                <td>Twitter</td>
-                <td>98</td>
-                <td>8%</td>
-              </tr>
-              <tr>
-                <td>Other</td>
-                <td>73</td>
-                <td>5%</td>
-              </tr>
-            </tbody>
+            <tbody id="referrerTable"><tr><td colspan="3">Loading analytics...</td></tr></tbody>
           </table>
 
-          <div class="analytics-stats">
-            <div class="stat-card">
-              <div class="stat-label">Avg time on page</div>
-              <div class="stat-value">2:34</div>
-              <div class="stat-trend">+15s from last week</div>
-            </div>
-            <div class="stat-card">
-              <div class="stat-label">Unique visitors</div>
-              <div class="stat-value">892</div>
-              <div class="stat-trend">+6% this month</div>
-            </div>
-            <div class="stat-card">
-              <div class="stat-label">Most visited day</div>
-              <div class="stat-value">Tuesday</div>
-              <div class="stat-trend">Typically highest</div>
-            </div>
-          </div>
+          <div class="analytics-stats"><div class="stat-card"><div class="stat-label">Unique visitors</div><div class="stat-value" data-analytics-unique>-</div><div class="stat-trend">From your real traffic</div></div><div class="stat-card"><div class="stat-label">Most visited day</div><div class="stat-value" data-analytics-best-day>-</div><div class="stat-trend">Calculated from recorded visits</div></div></div>
 
           <!-- AI Insights -->
-          <div class="ai-insights">
-            <div class="ai-insight-card">
-              <h4>
-                <span>✨</span>
-                Engagement Tip
-              </h4>
-              <p>Users from LinkedIn spend 40% more time on your site. Consider adding more professional content tailored for this audience.</p>
-            </div>
-            <div class="ai-insight-card">
-              <h4>
-                <span>📈</span>
-                Growth Opportunity
-              </h4>
-              <p>Your Tuesday traffic is highest. Schedule important updates for Monday evening to maximize visibility.</p>
-            </div>
-            <div class="ai-insight-card">
-              <h4>
-                <span>🎯</span>
-                Content Suggestion
-              </h4>
-              <p>Visitors from tech companies frequently view your skills section. Consider expanding this with project examples.</p>
-            </div>
-          </div>
+          <div class="ai-insights" id="aiInsights"><div class="ai-insight-card"><h4>Traffic insights</h4><p>We'll show you insights once you have a few visits. Share your link to get started!</p></div></div>
         </section>
 
         <!-- Domains Section -->
@@ -1474,7 +1349,7 @@
           <div class="domain-item">
             <div class="domain-header">
               <div class="domain-info">
-                <div class="domain-name">mahdijadidi.drop.cv <span class="domain-badge">Primary</span></div>
+                <div class="domain-name">Loading... <span class="domain-badge">Primary</span></div>
                 <div class="domain-status">
                   <span class="status-dot"></span> Live
                 </div>
@@ -1489,7 +1364,7 @@
           <div class="domain-item">
             <div class="domain-header">
               <div class="domain-info">
-                <div class="domain-name">mahdi.drop.cv</div>
+                <div class="domain-name">Loading...</div>
                 <div class="domain-status">
                   <span class="status-dot"></span> Live
                 </div>
@@ -1529,7 +1404,7 @@
             <div class="card">
               <div class="form-group">
                 <label for="full-name">Full name</label>
-                <input type="text" id="full-name" value="Mahdi Jadidi">
+                <input type="text" id="full-name" value="">
               </div>
               <div class="form-group">
                 <label for="job-title">Job title</label>
@@ -1558,11 +1433,11 @@
             <div class="card">
               <div class="form-group">
                 <label for="contact-email">Email</label>
-                <input type="email" id="contact-email" value="mahdi@example.com">
+                <input type="email" id="contact-email" value="">
               </div>
               <div class="form-group">
                 <label for="linkedin-url">LinkedIn URL</label>
-                <input type="url" id="linkedin-url" value="https://linkedin.com/in/mahdijadidi">
+                <input type="url" id="linkedin-url" value="">
               </div>
               <div class="form-group">
                 <label for="phone">Phone (optional)</label>
@@ -1576,8 +1451,8 @@
             <div class="card">
               <div class="privacy-item">
                 <div>
-                  <div class="privacy-label">Show in public Discovery</div>
-                  <div style="font-size: 13px; color: var(--color-gray-text);">Your profile will be visible to everyone</div>
+                  <div class="privacy-label">Public website visibility</div>
+                  <div style="font-size: 13px; color: var(--color-gray-text);">Your resume website is visible at its direct URL</div>
                 </div>
                 <label class="toggle">
                   <input type="checkbox" checked>
@@ -1586,8 +1461,8 @@
               </div>
               <div class="privacy-item">
                 <div>
-                  <div class="privacy-label">Open to work</div>
-                  <div style="font-size: 13px; color: var(--color-gray-text);">Recruiters can see you're looking</div>
+                  <div class="privacy-label">Show availability</div>
+                  <div style="font-size: 13px; color: var(--color-gray-text);">People visiting your page can see you're available</div>
                 </div>
                 <label class="toggle">
                   <input type="checkbox" checked>
@@ -1596,8 +1471,8 @@
               </div>
               <div class="privacy-item">
                 <div>
-                  <div class="privacy-label">Show contact info to recruiters</div>
-                  <div style="font-size: 13px; color: var(--color-gray-text);">Recruiters can see your contact details</div>
+                  <div class="privacy-label">Show contact info</div>
+                  <div style="font-size: 13px; color: var(--color-gray-text);">Contact details appear on your public page</div>
                 </div>
                 <label class="toggle">
                   <input type="checkbox">
@@ -1675,7 +1550,7 @@
   <script src="dropcv-auth.js"></script>
   <script src="dropcv-upload.js"></script>
   <script>
-    async function bootstrapDashboard() {
+    async function bootstrapPremiumDashboard() {
       const content = document.getElementById('dashboardContent');
       if (content) content.classList.add('auth-pending');
 
@@ -1686,7 +1561,7 @@
         return;
       }
       const expectedPlan = 'Premium';
-      if (user.plan !== expectedPlan && user.userType !== 'recruiter') {
+      if (user.plan !== expectedPlan) {
         window.location.href = window.dropCV.getDashboardUrl(user.plan);
         return;
       }
@@ -1961,6 +1836,82 @@
         var root = document.getElementById('site-tabs-root');
         if (!root) return;
 
+        var conversionUsageState = null;
+        var cvUsageEl = null;
+        var storyUsageEl = null;
+
+        function hasExistingDeployment() {
+          return Boolean((window.currentUser && window.currentUser.latestDeployment) || U.getDeployment());
+        }
+
+        function getCvMode() {
+          return hasExistingDeployment() ? 'regenerate' : 'convert';
+        }
+
+        function getUsageForMode(mode) {
+          if (!conversionUsageState) return null;
+          return conversionUsageState[mode] || null;
+        }
+
+        function formatResetDate(resetAt) {
+          if (!resetAt) return '';
+          var date = new Date(resetAt);
+          if (Number.isNaN(date.getTime())) return '';
+          var lang = window.dropCVI18n && window.dropCVI18n.get ? window.dropCVI18n.get() : 'fa';
+          return date.toLocaleDateString(lang === 'en' ? 'en-US' : 'fa-IR', {
+            month: 'short',
+            day: 'numeric'
+          });
+        }
+
+        function renderConversionUsage(target) {
+          if (!target) return;
+          if (!conversionUsageState) {
+            target.textContent = '';
+            return;
+          }
+
+          var lang = window.dropCVI18n && window.dropCVI18n.get ? window.dropCVI18n.get() : 'fa';
+          var convertUsage = conversionUsageState.convert || { used: 0, limit: 5, remaining: 5 };
+          var regenerateUsage = conversionUsageState.regenerate || { used: 0, limit: 10, remaining: 10 };
+
+          target.textContent = lang === 'en'
+            ? ('Monthly usage: ' + convertUsage.used + '/' + convertUsage.limit + ' conversions, ' + regenerateUsage.used + '/' + regenerateUsage.limit + ' regenerations.')
+            : ('مصرف ماهانه: ' + convertUsage.used + ' از ' + convertUsage.limit + ' تبدیل، ' + regenerateUsage.used + ' از ' + regenerateUsage.limit + ' بازسازی.');
+        }
+
+        function isModeLimited(mode) {
+          var usage = getUsageForMode(mode);
+          return Boolean(usage && usage.remaining <= 0);
+        }
+
+        async function refreshConversionUsage() {
+          var response = await window.dropCVApi.getConversionUsage();
+          if (!response.ok || !response.data) return;
+          conversionUsageState = response.data.usage || response.data;
+          renderConversionUsage(cvUsageEl);
+          renderConversionUsage(storyUsageEl);
+        }
+
+        async function waitForDeploymentReady(deploymentId) {
+          for (var i = 0; i < 60; i += 1) {
+            var statusRes = await window.dropCVApi.getDeploymentStatus(deploymentId);
+            if (statusRes.ok && statusRes.data && (statusRes.data.status === 'draft' || statusRes.data.status === 'live')) {
+              return statusRes.data;
+            }
+            if (statusRes.ok && statusRes.data && statusRes.data.status === 'failed') {
+              throw new Error('Generation failed');
+            }
+            await new Promise(function (resolve) { setTimeout(resolve, 1000); });
+          }
+          throw new Error('Generation timed out');
+        }
+
+        window.addEventListener('dropcv:language', function () {
+          renderConversionUsage(cvUsageEl);
+          renderConversionUsage(storyUsageEl);
+        });
+
         var tabContents = {};
         var tabBar = U.createTabBar([
           { id: 'files', label: 'Upload your site' },
@@ -1977,30 +1928,108 @@
         (function buildTab1() {
           var tab = el('div', { className: 'dropcv-tab-content active' });
           tab.appendChild(el('h2', { className: 'dropcv-story-heading', textContent: 'Upload your site' }));
-          tab.appendChild(el('p', { className: 'dropcv-story-sub', textContent: "Upload your HTML/CSS/JS files and we'll publish them to your subdomain instantly." }));
+          tab.appendChild(el('p', { className: 'dropcv-story-sub', textContent: "Upload HTML/CSS/JS files, a ZIP bundle, or a PDF/DOCX resume. We'll publish site files directly or generate a polished resume site for you." }));
 
           var zoneWrap = el('div');
           var zone = U.createUploadZone({
-            accept: '.html,.css,.js,.zip',
+            accept: '.html,.htm,.css,.js,.zip,.pdf,.doc,.docx,.txt',
+            multiple: true,
             formatsText: 'Accepted formats: .html .css .js .zip — Max 10MB',
-            onChange: function (file) { deployBtn.disabled = !file; }
+            onChange: function (file) { deployBtn.disabled = !file || (Array.isArray(file) && file.length === 0); }
           });
           zoneWrap.appendChild(zone.el);
           zoneWrap.appendChild(zone.formatsEl);
           tab.appendChild(zoneWrap);
+          zone.formatsEl.textContent = 'Accepted formats: .html .htm .css .js .zip .pdf .doc .docx .txt — Max 25MB';
+
+          var briefCard = el('div', { className: 'card', style: 'margin-top:18px;border:1px solid var(--color-gray-light);padding:18px;' });
+          briefCard.appendChild(el('h3', { textContent: 'Optional site brief', style: 'margin-bottom:8px;' }));
+          briefCard.appendChild(el('p', { textContent: 'These details help the generator when you upload a PDF or Word resume. They are also saved as site metadata for direct uploads.', style: 'font-size:14px;color:var(--color-gray-text);margin-bottom:16px;' }));
+
+          var briefGrid = el('div', { style: 'display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;' });
+          briefGrid.appendChild(el('div', { className: 'form-group' }, [
+            el('label', { for: 'site-title', textContent: 'Site title' }),
+            el('input', { type: 'text', id: 'site-title', placeholder: 'My resume site' })
+          ]));
+          briefGrid.appendChild(el('div', { className: 'form-group' }, [
+            el('label', { for: 'site-style', textContent: 'Style direction' }),
+            el('input', { type: 'text', id: 'site-style', placeholder: 'Bold editorial, minimal, dark, etc.' })
+          ]));
+          briefCard.appendChild(briefGrid);
+
+          briefCard.appendChild(el('div', { className: 'form-group' }, [
+            el('label', { for: 'site-summary', textContent: 'Short brief' }),
+            el('textarea', { id: 'site-summary', placeholder: 'What should the website emphasize?' })
+          ]));
+
+          var briefGrid2 = el('div', { style: 'display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;' });
+          briefGrid2.appendChild(el('div', { className: 'form-group' }, [
+            el('label', { for: 'site-cta', textContent: 'CTA text' }),
+            el('input', { type: 'text', id: 'site-cta', placeholder: 'Hire me / Let’s talk' })
+          ]));
+          briefGrid2.appendChild(el('div', { className: 'form-group' }, [
+            el('label', { for: 'site-palette', textContent: 'Color palette' }),
+            el('input', { type: 'text', id: 'site-palette', placeholder: '#0F6E56, #111827, #F8FAFC' })
+          ]));
+          briefCard.appendChild(briefGrid2);
+
+          briefCard.appendChild(el('div', { className: 'form-group', style: 'margin-bottom:0;' }, [
+            el('label', { for: 'site-notes', textContent: 'Extra notes' }),
+            el('textarea', { id: 'site-notes', placeholder: 'Anything the generated site should include or avoid?' })
+          ]));
+
+          tab.appendChild(briefCard);
 
           var deployBtn = el('button', { className: 'dropcv-deploy-btn', type: 'button', disabled: true, textContent: 'Go live →' });
           tab.appendChild(deployBtn);
           var result = el('div');
           tab.appendChild(result);
 
-          deployBtn.addEventListener('click', function () {
-            if (!zone.getFile()) return;
+          deployBtn.addEventListener('click', async function () {
+            var files = zone.getFiles ? zone.getFiles() : [zone.getFile()].filter(Boolean);
+            if (!files.length) return;
+
             deployBtn.disabled = true;
-            U.runDeploySimulation(result, {
-              url: userURL, method: 'files', title: 'Your site is live!', visitHref: '#',
-              onDone: function () { deployBtn.disabled = false; }
-            });
+            result.innerHTML = '';
+
+            try {
+              var response = await window.dropCVApi.uploadSite({
+                files: files,
+                fields: {
+                  siteTitle: (document.getElementById('site-title') || {}).value || '',
+                  style: (document.getElementById('site-style') || {}).value || '',
+                  summary: (document.getElementById('site-summary') || {}).value || '',
+                  ctaText: (document.getElementById('site-cta') || {}).value || '',
+                  palette: (document.getElementById('site-palette') || {}).value || '',
+                  notes: (document.getElementById('site-notes') || {}).value || ''
+                }
+              });
+
+              if (!response.ok || !response.data || !response.data.deploymentId) {
+                if (response.status === 402 && response.data && response.data.upgradeUrl) {
+                  result.appendChild(U.createUpgradeCard(
+                    'Premium required',
+                    'Upgrade to publish HTML/ZIP uploads and AI-generated resume sites.',
+                    'Upgrade to Premium →',
+                    response.data.upgradeUrl
+                  ));
+                }
+                throw new Error(response.error || 'Upload failed');
+              }
+
+              U.runDeploySimulation(result, {
+                url: userURL,
+                method: 'files',
+                title: 'Your site is live!',
+                visitHref: (window.location.protocol === 'http:' ? 'http://' : 'https://') + userURL,
+                onDone: function () { deployBtn.disabled = false; }
+              });
+            } catch (error) {
+              if (!result.innerHTML) {
+                result.innerHTML = '<div class="dropcv-status-card"><div class="dropcv-status-row"><span class="dropcv-status-title">Upload failed</span></div><div class="dropcv-status-sub">' + escapeHtml(error && error.message ? error.message : 'Upload failed') + '</div></div>';
+              }
+              deployBtn.disabled = false;
+            }
           });
           root.appendChild(tab);
           tabContents.files = tab;
@@ -2016,7 +2045,7 @@
           var zone = U.createUploadZone({
             accept: '.pdf,.doc,.docx,.txt',
             formatsText: 'Accepted formats: .pdf .doc .docx .txt — Max 20MB',
-            onChange: function (file) { convertBtn.disabled = !file; }
+            onChange: function (file) { convertBtn.disabled = !file || isModeLimited(getCvMode()); }
           });
           zoneWrap.appendChild(zone.el);
           zoneWrap.appendChild(zone.formatsEl);
@@ -2027,31 +2056,88 @@
           var result = el('div');
           tab.appendChild(result);
 
-          convertBtn.addEventListener('click', function () {
-            if (!zone.getFile()) return;
+          function escapeHtml(value) {
+            return String(value == null ? '' : value)
+              .replace(/&/g, '&amp;')
+              .replace(/</g, '&lt;')
+              .replace(/>/g, '&gt;')
+              .replace(/"/g, '&quot;')
+              .replace(/'/g, '&#39;');
+          }
+
+          function showFailure(error) {
+            var message = error && error.message ? error.message : 'Upload failed';
+            if (error && error.statusCode === 429 && error.usage) {
+              var usage = error.usage[getCvMode()] || error.usage.convert || error.usage.regenerate;
+              if (usage) {
+                var reset = formatResetDate(usage.resetAt);
+                message = 'Monthly ' + getCvMode() + ' limit reached: ' + usage.used + '/' + usage.limit + ' used' + (reset ? '. Resets on ' + reset + '.' : '.');
+              }
+            }
+
+            result.innerHTML = '<div class="dropcv-status-card"><div class="dropcv-status-row"><span class="dropcv-status-title">Upload failed</span></div><div class="dropcv-status-sub">' + escapeHtml(message) + '</div></div>';
+            convertBtn.disabled = !zone.getFile() || isModeLimited(getCvMode());
+          }
+
+          convertBtn.addEventListener('click', async function () {
+            var file = zone.getFile();
+            if (!file) return;
+
+            var mode = getCvMode();
+            if (isModeLimited(mode)) {
+              await refreshConversionUsage().catch(function () {});
+              showFailure({ message: 'Monthly limit reached', statusCode: 429, usage: { convert: getUsageForMode('convert'), regenerate: getUsageForMode('regenerate') } });
+              return;
+            }
+
             convertBtn.disabled = true;
-            U.runPipeline(result, [
-              { label: 'Reading your CV...', duration: 1500 },
-              { label: 'Extracting your information...', duration: 2000 },
-              { label: 'Building your resume site...', duration: 2000 },
-              { label: 'Publishing to your subdomain...', duration: 1000 }
-            ], function () {
-              U.setDeployment({ deployed: true, url: userURL, updatedAt: 'just now', method: 'pdf', timestamp: Date.now() });
-              U.refreshAllStatusCards();
-              U.renderSuccessCard(result, { title: 'Your resume site is live! 🎉', url: userURL, visitHref: '#' });
-              var link = el('p', { style: 'text-align:center;margin-top:14px;font-size:14px;color:#666;' });
-              link.appendChild(document.createTextNode('Update your CV? '));
-              var a = el('a', { href: '#', className: 'dropcv-reupload-link', style: 'color:#0F6E56;font-weight:600;', textContent: 'Upload a new file to regenerate your site →' });
-              link.appendChild(a);
-              result.appendChild(link);
-              a.addEventListener('click', function (e) {
-                e.preventDefault();
-                result.innerHTML = '';
-                zone.reset();
-                convertBtn.disabled = true;
+            result.innerHTML = '';
+
+            try {
+              var response = await window.dropCVApi.uploadCV(file, { mode: mode });
+              if (!response.ok || !response.data || !response.data.deploymentId) {
+                var uploadError = new Error(response.error || 'Upload failed');
+                uploadError.statusCode = response.status;
+                uploadError.usage = response.data && response.data.usage;
+                throw uploadError;
+              }
+
+              var deploymentId = response.data.deploymentId;
+
+              U.runPipeline(result, [
+                { label: 'Reading your CV...', duration: 1500 },
+                { label: 'Extracting your information...', duration: 2000 },
+                { label: 'Building your resume site...', duration: 2000 },
+                { label: 'Publishing to your subdomain...', duration: 1000 }
+              ], function () {
+                (async function () {
+                  try {
+                    await waitForDeploymentReady(deploymentId);
+                    U.setDeployment({ deployed: true, url: userURL, updatedAt: 'just now', method: 'pdf', timestamp: Date.now() });
+                    U.refreshAllStatusCards();
+                    U.renderSuccessCard(result, { title: 'Your resume site is live!', url: userURL, visitHref: 'https://' + userURL });
+                    var link = el('p', { style: 'text-align:center;margin-top:14px;font-size:14px;color:#666;' });
+                    link.appendChild(document.createTextNode('Update your CV? '));
+                    var a = el('a', { href: '#', className: 'dropcv-reupload-link', style: 'color:#0F6E56;font-weight:600;', textContent: 'Upload a new file to regenerate your site ->' });
+                    link.appendChild(a);
+                    result.appendChild(link);
+                    a.addEventListener('click', function (e) {
+                      e.preventDefault();
+                      result.innerHTML = '';
+                      zone.reset();
+                      convertBtn.disabled = true;
+                    });
+                    await refreshConversionUsage().catch(function () {});
+                    convertBtn.disabled = !zone.getFile() || isModeLimited(getCvMode());
+                  } catch (pipelineError) {
+                    showFailure(pipelineError);
+                  }
+                })();
               });
-              convertBtn.disabled = false;
-            });
+            } catch (error) {
+              await refreshConversionUsage().catch(function () {});
+              showFailure(error);
+            }
           });
           root.appendChild(tab);
           tabContents.cv = tab;
@@ -2092,13 +2178,16 @@
           form.appendChild(generateBtn);
           var storyResult = el('div', { className: 'dropcv-story-result', id: 'story-result' });
           form.appendChild(storyResult);
+          storyUsageEl = el('div', { style: 'margin-top:12px;font-size:13px;color:#4B5563;line-height:1.5;' });
+          tab.appendChild(storyUsageEl);
+          renderConversionUsage(storyUsageEl);
           root.appendChild(tab);
 
           function updateGenerateState() {
             var v1 = document.getElementById('story-q1').value.trim();
             var v2 = document.getElementById('story-q2').value.trim();
             var v3 = document.getElementById('story-q3').value.trim();
-            generateBtn.disabled = !(v1 && v2 && v3);
+            generateBtn.disabled = !(v1 && v2 && v3) || isModeLimited('regenerate');
           }
 
           questions.forEach(function (q) {
@@ -2145,7 +2234,21 @@
             '</div>';
           }
 
-          generateBtn.addEventListener('click', function () {
+          function showFailure(error) {
+            var message = error && error.message ? error.message : 'Generation failed';
+            if (error && error.statusCode === 429 && error.usage) {
+              var usage = error.usage.regenerate || error.usage.convert || getUsageForMode('regenerate');
+              if (usage) {
+                var reset = formatResetDate(usage.resetAt);
+                message = 'Monthly regenerate limit reached: ' + usage.used + '/' + usage.limit + ' used' + (reset ? '. Resets on ' + reset + '.' : '.');
+              }
+            }
+
+            storyResult.innerHTML = '<div class="dropcv-status-card"><div class="dropcv-status-row"><span class="dropcv-status-title">Generation failed</span></div><div class="dropcv-status-sub">' + escapeHtml(message) + '</div></div>';
+            generateBtn.disabled = !(document.getElementById('story-q1').value.trim() && document.getElementById('story-q2').value.trim() && document.getElementById('story-q3').value.trim()) || isModeLimited('regenerate');
+          }
+
+          generateBtn.addEventListener('click', async function () {
             var valid = true;
             [1, 2, 3].forEach(function (qid) {
               var ta = document.getElementById('story-q' + qid);
@@ -2173,40 +2276,80 @@
               userName = u2.userName || u2.firstName || '';
             } catch (e) {}
 
-            U.runPipeline(storyResult, [
-              { label: 'Reading your story...', duration: 1000 },
-              { label: 'Writing your professional CV...', duration: 2500 },
-              { label: 'Designing your resume site...', duration: 2000 },
-              { label: 'Publishing to your subdomain...', duration: 1000 }
-            ], function () {
-              storyResult.innerHTML = '';
-              storyResult.appendChild(el('h3', { style: 'font-size:20px;font-weight:700;margin:0 0 12px;', textContent: "Here's what we created for you" }));
-              var previewWrap = el('div');
-              previewWrap.innerHTML = buildCvPreviewHtml(answers, userName);
-              storyResult.appendChild(previewWrap);
+            var body = {
+              q1: answers.q1,
+              q2: answers.q2,
+              q3: answers.q3,
+              q4: answers.q4,
+              q5: answers.q5,
+              q6: answers.q6
+            };
 
-              var btnWrap = el('div', { style: 'display:flex;flex-direction:column;gap:10px;margin-top:18px;' });
-              var deployBtn = el('button', { className: 'dropcv-deploy-btn', type: 'button', textContent: 'Publish this as my site →' });
-              var editBtn = el('button', { className: 'dropcv-btn-ghost', type: 'button', textContent: 'Edit before publishing →', style: 'width:100%;text-align:center;' });
-              btnWrap.appendChild(deployBtn);
-              btnWrap.appendChild(editBtn);
-              storyResult.appendChild(btnWrap);
+            try {
+              var response = await window.dropCVApi.uploadStory(body, { mode: 'regenerate' });
+              if (!response.ok || !response.data || !response.data.deploymentId) {
+                var uploadError = new Error(response.error || 'Generation failed');
+                uploadError.statusCode = response.status;
+                uploadError.usage = response.data && response.data.usage;
+                throw uploadError;
+              }
 
-              deployBtn.addEventListener('click', function () {
-                U.setDeployment({ deployed: true, url: userURL, updatedAt: 'just now', method: 'story', timestamp: Date.now() });
-                U.refreshAllStatusCards();
-                U.renderSuccessCard(storyResult, { title: 'Your site is live!', url: userURL, visitHref: '#' });
+              var deploymentId = response.data.deploymentId;
+
+              U.runPipeline(storyResult, [
+                { label: 'Reading your story...', duration: 1000 },
+                { label: 'Writing your professional CV...', duration: 2500 },
+                { label: 'Designing your resume site...', duration: 2000 },
+                { label: 'Publishing to your subdomain...', duration: 1000 }
+              ], function () {
+                (async function () {
+                  try {
+                    await waitForDeploymentReady(deploymentId);
+                    U.setDeployment({ deployed: true, url: userURL, updatedAt: 'just now', method: 'story', timestamp: Date.now() });
+                    U.refreshAllStatusCards();
+
+                    storyResult.innerHTML = '';
+                    var successWrap = el('div');
+                    storyResult.appendChild(successWrap);
+                    U.renderSuccessCard(successWrap, { title: 'Your site is live!', url: userURL, visitHref: 'https://' + userURL });
+                    storyResult.appendChild(el('h3', { style: 'font-size:20px;font-weight:700;margin:18px 0 12px;', textContent: "Here's what we created for you" }));
+
+                    var previewWrap = el('div');
+                    previewWrap.innerHTML = buildCvPreviewHtml(answers, userName);
+                    storyResult.appendChild(previewWrap);
+
+                    var btnWrap = el('div', { style: 'display:flex;flex-direction:column;gap:10px;margin-top:18px;' });
+                    var openBtn = el('button', { className: 'dropcv-deploy-btn', type: 'button', textContent: 'Open live site ->' });
+                    var editBtn = el('button', { className: 'dropcv-btn-ghost', type: 'button', textContent: 'Edit answers ->', style: 'width:100%;text-align:center;' });
+                    btnWrap.appendChild(openBtn);
+                    btnWrap.appendChild(editBtn);
+                    storyResult.appendChild(btnWrap);
+
+                    openBtn.addEventListener('click', function () {
+                      window.open('https://' + userURL, '_blank', 'noopener');
+                    });
+                    editBtn.addEventListener('click', function () {
+                      var h = document.getElementById('story-form-heading');
+                      if (h) h.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    });
+
+                    await refreshConversionUsage().catch(function () {});
+                    generateBtn.disabled = !(document.getElementById('story-q1').value.trim() && document.getElementById('story-q2').value.trim() && document.getElementById('story-q3').value.trim()) || isModeLimited('regenerate');
+                  } catch (pipelineError) {
+                    showFailure(pipelineError);
+                  }
+                })();
               });
-              editBtn.addEventListener('click', function () {
-                var h = document.getElementById('story-form-heading');
-                if (h) h.scrollIntoView({ behavior: 'smooth', block: 'start' });
-              });
-              generateBtn.disabled = false;
-            });
+            } catch (error) {
+              await refreshConversionUsage().catch(function () {});
+              showFailure(error);
+            }
           });
 
           tabContents.story = tab;
         })();
+
+        refreshConversionUsage().catch(function () {});
       });
     }
 
@@ -2234,7 +2377,8 @@
       }
     });
 
-    document.addEventListener('DOMContentLoaded', bootstrapDashboard, { once: true });
+    document.addEventListener('DOMContentLoaded', bootstrapPremiumDashboard, { once: true });
   </script>
+  <script type="module" src="dashboard-motion.mjs"></script>
 </body>
 </html>

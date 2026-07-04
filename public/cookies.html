@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Terms of Service - drop.cv</title>
+  <title>Cookie Policy - drop.cv</title>
   <link rel="stylesheet" href="design-system.css" />
   <style>
     body {
@@ -39,35 +39,40 @@
       margin: 0 0 32px;
     }
     .card {
-      background: white;
-      border: 1px solid var(--border-subtle);
+      background: var(--surface);
+      border: 1px solid var(--line);
       border-radius: 24px;
-      padding: 28px;
-      box-shadow: var(--shadow-sm);
+      padding: 32px;
+      box-shadow: 0 18px 40px rgba(15, 55, 45, 0.05);
     }
     h2 {
-      font-size: 22px;
-      margin: 28px 0 12px;
-      letter-spacing: -0.02em;
+      margin: 0 0 12px;
+      font-size: 24px;
     }
     p, li {
-      font-size: 16px;
-      line-height: 1.75;
+      line-height: 1.7;
       color: var(--text-secondary);
+      font-size: 16px;
     }
     ul {
-      margin: 12px 0 0 20px;
+      margin: 0 0 24px 20px;
+      padding: 0;
+    }
+    code {
+      padding: 2px 6px;
+      border-radius: 6px;
+      background: #eef5f1;
+      color: var(--text-primary);
+      font-size: 0.95em;
     }
     .footer-note {
       margin-top: 28px;
       font-size: 14px;
       color: var(--text-tertiary);
     }
-
     footer {
       padding: 0 24px 80px;
     }
-
     .page-footer {
       max-width: 840px;
       margin: 0 auto;
@@ -81,13 +86,11 @@
       font-size: 14px;
       color: var(--text-tertiary);
     }
-
     .footer-links {
       display: flex;
       flex-wrap: wrap;
       gap: 16px;
     }
-
     .footer-links a {
       color: var(--color-teal-700);
       text-decoration: none;
@@ -98,31 +101,24 @@
 <body>
   <main class="page-shell">
     <a class="top-link" href="index.html">← Back to drop.cv</a>
-    <h1>Terms of Service</h1>
-    <p class="lede">These terms cover how drop.cv works, what you can publish, and what we expect from both sides when you use the platform.</p>
+    <h1>Cookie Policy</h1>
+    <p class="lede">This page explains the cookies and browser storage we use, and why they matter to your account and draft data.</p>
 
     <section class="card">
-      <h2>Using the service</h2>
-      <p>You agree to use drop.cv for lawful purposes only. You are responsible for the content you upload, publish, or share through your profile.</p>
+      <h2>Authentication</h2>
+      <p>We set the <code>dropcv_token</code> cookie when you sign in or create an account. It keeps your session active and is marked httpOnly so the browser can send it to the server without exposing it to page scripts.</p>
 
-      <h2>Your content</h2>
-      <p>You keep ownership of the content you create. By publishing it on drop.cv, you grant us permission to host, display, and process it so the service can work.</p>
+      <h2>Device storage</h2>
+      <p>We store <code>dropcv_lang</code> in local storage to remember your language choice and <code>dropCV_deployment</code> to remember the current draft state in the dashboard.</p>
 
-      <h2>Acceptable use</h2>
-      <ul>
-        <li>Do not upload content that is illegal, abusive, misleading, or infringing.</li>
-        <li>Do not attempt to disrupt the service or access accounts that are not yours.</li>
-        <li>Do not misuse analytics or public visibility features in ways that violate privacy or law.</li>
-      </ul>
+      <h2>Analytics and third parties</h2>
+      <p>We do not use advertising cookies. Some pages load third-party services for fonts, payments, or optional integrations, and those services may set their own cookies or receive technical data according to their own policies.</p>
 
-      <h2>Privacy and cookies</h2>
-      <p>Your use of the service is also governed by our <a href="privacy.html">Privacy Policy</a> and <a href="cookies.html">Cookie Policy</a>. Those pages explain the cookies, device storage, and analytics data we use to keep accounts working and measure traffic.</p>
-
-      <h2>Service changes</h2>
-      <p>We may improve, update, or change parts of the product over time. If a change materially affects your use of the service, we’ll aim to communicate it clearly.</p>
+      <h2>Managing preferences</h2>
+      <p>You can clear cookies and site data from your browser settings at any time. If you block cookies entirely, sign-in will not work because the service depends on the auth cookie.</p>
 
       <h2>Contact</h2>
-      <p>For questions about these terms, <a href="contact.html">contact us here</a> or email <a href="mailto:support@drop.cv">support@drop.cv</a>.</p>
+      <p>If you have a question about cookies or browser storage, <a href="contact.html">contact us</a> or email <a href="mailto:support@drop.cv">support@drop.cv</a>.</p>
 
       <p class="footer-note">Effective date: July 2, 2026</p>
     </section>
@@ -133,8 +129,8 @@
       <span>© <span id="footerYear">2026</span> drop.cv</span>
       <div class="footer-links">
         <a href="contact.html">Contact</a>
-        <a href="cookies.html">Cookies</a>
         <a href="privacy.html">Privacy</a>
+        <a href="terms.html">Terms</a>
       </div>
     </div>
   </footer>

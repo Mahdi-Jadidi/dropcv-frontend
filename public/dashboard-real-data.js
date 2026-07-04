@@ -3,12 +3,21 @@
   }
 
   function isDashboardFile() {
-    return /dashboard-(basic|pro|premium|recruiter)\.html$/.test(currentFile());
+    return /dashboard-(standard|premium)\.html$/.test(currentFile());
   }
 
   function getPrimaryDomain(user) {
     var domains = Array.isArray(user && user.domains) ? user.domains : [];
     return domains.find(function (d) { return d.is_primary; }) || domains[0] || null;
+  }
+
+  function escapeHtml(value) {
+    return String(value == null ? '' : value)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
   }
 
   function setText(selector, value) {
@@ -28,6 +37,170 @@
     if (!content) return;
     content.classList.remove('auth-pending');
     content.classList.add('auth-ready');
+  }
+
+  function injectTrialBannerStyles() {
+    if (document.getElementById('dropcv-trial-banner-styles')) return;
+    var style = document.createElement('style');
+    style.id = 'dropcv-trial-banner-styles';
+    style.textContent = [
+      '.trial-banner { display:flex; align-items:center; gap:14px; padding:14px 20px; border-radius:12px; margin-bottom:24px; border:1px solid; }',
+      '.trial-active { background:#F0FAF7; border-color:#D1FAE5; color:#064E3B; }',
+      '.trial-urgent { background:#FEF3C7; border-color:#F59E0B; color:#7C2D12; }',
+      '.trial-offline { background:#FCEBEB; border-color:#F09595; color:#791F1F; }',
+      '.trial-banner-icon { width:36px; height:36px; border-radius:999px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }',
+      '.trial-banner-text { flex:1; display:flex; flex-direction:column; gap:2px; min-width:0; }',
+      '.trial-banner-text strong { font-size:14px; font-weight:600; }',
+      '.trial-banner-text span { font-size:13px; opacity:0.85; }',
+      '.trial-banner-cta { background:#0F6E56; color:#fff; padding:9px 16px; border-radius:8px; font-size:13px; font-weight:600; text-decoration:none; white-space:nowrap; flex-shrink:0; }',
+      '.trial-banner-cta-urgent { background:#E53E3E; }',
+      '@media (max-width: 640px) { .trial-banner { align-items:flex-start; flex-wrap:wrap; } .trial-banner-cta { width:100%; text-align:center; } }'
+    ].join('\n');
+    document.head.appendChild(style);
+  }
+
+  function normalizeTrialStatus(raw) {
+    var payload = raw || {};
+    var status = String(payload.status || payload.siteStatus || payload.state || '').trim().toLowerCase();
+    var daysLeft = Number(
+      payload.daysLeft ?? payload.days_left ?? payload.remainingDays ?? payload.days_remaining ?? payload.trialDaysLeft ?? payload.graceDaysLeft ?? payload.daysRemaining ?? 0
+    );
+    return {
+      status: status,
+      daysLeft: Number.isFinite(daysLeft) ? daysLeft : 0,
+      renewsOn: payload.renewsOn || payload.renews_on || payload.renewalDate || payload.renewal_date || '',
+    };
+  }
+
+  function getTrialDays() {
+    var trialDays = Number(
+      window.dropCVTrialDays ||
+      (window.dropCVConfig && window.dropCVConfig.trialDays) ||
+      3
+    );
+    return Number.isFinite(trialDays) && trialDays > 0 ? Math.round(trialDays) : 3;
+  }
+
+  function getDashboardHomeAnchor() {
+    var home = document.getElementById('home');
+    if (home) return home;
+    var statsGrid = document.querySelector('.stats-grid');
+    if (statsGrid) return statsGrid.parentElement || statsGrid;
+    var firstSection = document.querySelector('.section');
+    if (firstSection) return firstSection;
+    return document.getElementById('dashboardContent');
+  }
+
+  function ensureTrialBannerMount() {
+    var anchor = getDashboardHomeAnchor();
+    if (!anchor) return null;
+    var existing = document.getElementById('trial-status-banner');
+    if (existing) return existing;
+
+    var banner = document.createElement('div');
+    banner.id = 'trial-status-banner';
+    banner.setAttribute('aria-live', 'polite');
+    var statsGrid = anchor.querySelector && anchor.querySelector('.stats-grid');
+    if (statsGrid && statsGrid.parentElement === anchor) {
+      anchor.insertBefore(banner, statsGrid);
+    } else {
+      anchor.insertBefore(banner, anchor.firstChild);
+    }
+    return banner;
+  }
+
+  function renderTrialBanner(mode) {
+    injectTrialBannerStyles();
+    var banner = ensureTrialBannerMount();
+    if (!banner) return;
+
+    var trialDays = getTrialDays();
+    var daysLeft = Number(mode.daysLeft);
+    daysLeft = Number.isFinite(daysLeft) ? Math.max(0, Math.round(daysLeft)) : 0;
+    var daysLeftLabel = daysLeft + ' day' + (daysLeft === 1 ? '' : 's');
+    var trialLabel = trialDays + '-day trial';
+    var isOffline = mode.status === 'offline_grace' || mode.status === 'offline' || mode.status === 'grace' || mode.status === 'expired';
+    var isLastDay = daysLeft <= 1 && !isOffline;
+    var bannerClass = isOffline ? 'trial-banner trial-offline' : (isLastDay ? 'trial-banner trial-urgent' : 'trial-banner trial-active');
+    var iconColor = isOffline ? 'color:#E53E3E' : (isLastDay ? 'color:#B45309' : 'color:#0F6E56');
+    var title;
+    var body;
+    var ctaText;
+    var ctaClass = 'trial-banner-cta';
+
+    document.documentElement.dataset.trialStatus = mode.status || '';
+    document.documentElement.dataset.trialDaysLeft = String(daysLeft);
+    document.documentElement.dataset.trialDaysTotal = String(trialDays);
+    window.dropCVTrialState = {
+      status: mode.status || '',
+      daysLeft: daysLeft,
+      trialDays: trialDays,
+      renewsOn: mode.renewsOn || ''
+    };
+
+    if (isOffline) {
+      title = 'Your site is offline';
+      body = 'Your site is offline. Your name and content are saved for ' + daysLeftLabel + ' more.';
+      ctaText = 'Reactivate my site &rarr;';
+      ctaClass += ' trial-banner-cta-urgent';
+    } else if (isLastDay) {
+      title = 'Last day of your trial';
+      body = 'Your site is live during the ' + trialLabel + '. Add payment today to keep it online after the trial ends.';
+      ctaText = 'Add payment &rarr;';
+    } else {
+      title = trialLabel + ' &mdash; ' + daysLeftLabel + ' left';
+      body = 'Your site is live during the ' + trialLabel + '. We will remind you when 1 day is left.';
+      ctaText = 'Add payment &rarr;';
+    }
+
+    banner.className = bannerClass;
+    banner.innerHTML = [
+      '<div class="trial-banner-icon" style="' + iconColor + '">',
+        isOffline
+          ? '<svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><circle cx="10" cy="10" r="8" stroke="currentColor" stroke-width="1.4"/><path d="M7 7l6 6M13 7l-6 6" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>'
+          : '<svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><circle cx="10" cy="10" r="8" stroke="currentColor" stroke-width="1.4"/><path d="M10 6v4l3 2" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>',
+      '</div>',
+      '<div class="trial-banner-text">',
+        '<strong>' + title + '</strong>',
+        '<span>' + body + '</span>',
+      '</div>',
+      '<a href="billing.html" class="' + ctaClass + '">' + ctaText + '</a>'
+    ].join('');
+  }
+
+  async function loadTrialBanner(user) {
+    if (!window.dropCVApi || typeof window.dropCVApi.request !== 'function') return;
+
+    var res = await window.dropCVApi.request('GET', '/api/users/site-status');
+    if (!res.ok || !res.data) return;
+
+    var info = normalizeTrialStatus(res.data);
+    var trialDays = getTrialDays();
+    var daysLeft = Number(info.daysLeft);
+    daysLeft = Number.isFinite(daysLeft) ? Math.max(0, Math.round(daysLeft)) : 0;
+    document.documentElement.dataset.trialStatus = info.status || '';
+    document.documentElement.dataset.trialDaysLeft = String(daysLeft);
+    document.documentElement.dataset.trialDaysTotal = String(trialDays);
+    window.dropCVTrialState = {
+      status: info.status || '',
+      daysLeft: daysLeft,
+      trialDays: trialDays,
+      renewsOn: info.renewsOn || ''
+    };
+    if (info.status === 'released') {
+      window.location.href = 'site-expired.html';
+      return;
+    }
+
+    var trialStatuses = ['trial', 'offline_grace', 'offline', 'grace', 'expired'];
+    var showBanner = trialStatuses.indexOf(info.status) !== -1 || (!info.status && info.daysLeft > 0);
+    if (!showBanner || info.status === 'active' || info.status === 'paid') {
+      var existing = document.getElementById('trial-status-banner');
+      if (existing) existing.remove();
+      return;
+    }
+
+    renderTrialBanner(info);
   }
 
   function getUserUrl(user) {
@@ -56,13 +229,14 @@
 
     domainList.innerHTML = domains.map(function (d) {
       var fullUrl = d.full_url || (d.slug ? d.slug + '.drop.cv' : '');
+      var safeUrl = escapeHtml(fullUrl);
       return [
         '<div class="domain-row">',
-          '<span class="domain-url">' + fullUrl + '</span>',
+          '<span class="domain-url">' + safeUrl + '</span>',
           d.is_primary ? '<span class="badge badge-green">Primary</span>' : '',
           '<span class="live-dot-green"></span>',
-          '<button class="btn-sm" type="button" data-copy-domain="' + fullUrl + '">Copy</button>',
-          '<a href="https://' + fullUrl + '" target="_blank" rel="noreferrer" class="btn-sm">Visit →</a>',
+          '<button class="btn-sm" type="button" data-copy-domain="' + safeUrl + '">Copy</button>',
+          '<a href="https://' + safeUrl + '" target="_blank" rel="noreferrer" class="btn-sm">Visit &rarr;</a>',
         '</div>',
       ].join('');
     }).join('');
@@ -93,7 +267,7 @@
       totalViews: data.totalViews,
       viewsThisWeek: data.viewsThisWeek,
       uniqueVisitors: data.uniqueVisitors,
-      bestDay: data.bestDay || '—'
+      bestDay: data.bestDay || '-'
     };
 
     Object.keys(totals).forEach(function (key) {
@@ -104,17 +278,45 @@
       }
     });
 
+    document.querySelectorAll('[data-analytics-unique]').forEach(function (el) {
+      el.textContent = String(data.uniqueVisitors || 0);
+    });
+    document.querySelectorAll('[data-analytics-best-day]').forEach(function (el) {
+      el.textContent = data.bestDay ? new Date(data.bestDay + 'T00:00:00Z').toLocaleDateString() : '-';
+    });
+
+    var activity = document.getElementById('recentActivity');
+    if (activity) {
+      activity.innerHTML = '<h3>Recent activity</h3><div class="empty-state-sm"><p>' +
+        ((data.totalViews || 0) === 0
+          ? 'No visits yet. Share your link to get started.'
+          : 'Recent visit details are not available yet. Your totals above use recorded analytics.') +
+        '</p></div>';
+    }
+
+    var insightCopy = "We'll show you insights once you have a few visits. Share your link to get started!";
+    if ((data.totalViews || 0) >= 5) {
+      var topReferrer = Array.isArray(data.topReferrers) && data.topReferrers[0];
+      insightCopy = topReferrer
+        ? (topReferrer.referrer || 'Direct') + ' is your leading traffic source with ' + topReferrer.count + ' recorded visits.'
+        : 'Your profile has enough traffic for insights, but no referrer data is available yet.';
+    }
+    var summary = document.querySelector('#aiSummary p');
+    if (summary) summary.textContent = insightCopy;
+    var insights = document.getElementById('aiInsights');
+    if (insights) insights.innerHTML = '<div class="ai-insight-card"><h4>Traffic insights</h4><p>' + escapeHtml(insightCopy) + '</p></div>';
+
     var referrerTable = document.getElementById('referrerTable');
     if (referrerTable && Array.isArray(data.topReferrers)) {
       referrerTable.innerHTML = data.topReferrers.map(function (row) {
-        return '<tr><td>' + (row.referrer || 'Direct') + '</td><td>' + row.count + '</td></tr>';
+        return '<tr><td>' + escapeHtml(row.referrer || 'Direct') + '</td><td>' + escapeHtml(row.count) + '</td></tr>';
       }).join('');
     }
 
     var countriesList = document.getElementById('countriesList');
     if (countriesList && Array.isArray(data.topCountries)) {
       countriesList.innerHTML = data.topCountries.map(function (row) {
-        return '<div class="country-row"><span>' + row.country + '</span><span>' + row.count + ' views</span></div>';
+        return '<div class="country-row"><span>' + escapeHtml(row.country || 'Unknown') + '</span><span>' + escapeHtml(row.count) + ' views</span></div>';
       }).join('');
     }
 
@@ -161,6 +363,9 @@
     if (document.getElementById('user-url')) {
       setText('#user-url, #userUrlChip, .user-url-chip', url);
     }
+    setText('#dashboardPrimaryUrl', url || 'Not published yet');
+    setText('#siteStatusValue', url ? 'Live' : 'Not published');
+    setText('#siteStatusDetail', url ? 'Your public link is active' : 'Publish your site to activate your link');
     if (url) {
       setHref('[data-user-url]', 'https://' + url);
     }
@@ -194,8 +399,7 @@
     }
 
     var allowedPlans = {
-      'dashboard-basic.html': ['Basic'],
-      'dashboard-pro.html': ['Pro'],
+      'dashboard-standard.html': ['Standard'],
       'dashboard-premium.html': ['Premium']
     };
     var allowed = allowedPlans[currentFile()] || [];
@@ -205,6 +409,7 @@
     }
 
     window.currentUser = user;
+    await loadTrialBanner(user);
     loadDeploymentStatus(user);
 
     var domains = Array.isArray(user.domains) ? user.domains : [];
@@ -230,358 +435,13 @@
     }
   }
 
-  function mapRecruiterProject(row) {
-    return {
-      id: row.id,
-      name: row.name,
-      roleTitle: row.roleTitle || row.role_title || '',
-      industry: row.industry || '',
-      seniorityLevels: row.seniorityLevels || row.seniority_levels || [],
-      skillsRequired: row.skillsRequired || row.skills_required || [],
-      city: row.city || '',
-      isRemote: !!row.isRemote,
-      countries: row.countries || [],
-      notes: row.notes || '',
-      status: row.status || 'active',
-      candidateCount: row.candidateCount || row.candidate_count || 0,
-      createdAt: row.createdAt || row.created_at,
-      updatedAt: row.updatedAt || row.updated_at,
-    };
+  function bootstrapDashboard() {
+    if (!isDashboardFile()) return;
+    initProfessionalDashboard();
   }
 
-  function mapCandidate(row) {
-    return {
-      userId: row.userId || row.user_id,
-      id: row.userId || row.user_id,
-      name: row.fullName || row.full_name || row.name || '',
-      title: row.jobTitle || row.job_title || row.headline || '',
-      city: row.city || '',
-      email: row.email || '',
-      phone: row.phone || '',
-      slug: row.slug || '',
-      skills: row.skills || [],
-      level: row.seniority || '',
-      shortlistedAt: row.shortlistedAt || row.shortlisted_at || '',
-      shortlistNotes: row.shortlistNotes || row.shortlist_notes || '',
-      country: row.country || '',
-    };
+  if (document.readyState === 'loading') {
+    window.addEventListener('DOMContentLoaded', bootstrapDashboard);
+  } else {
+    bootstrapDashboard();
   }
-
-  async function loadRecruiterProjects() {
-    var res = await window.dropCVApi.getProjects();
-    if (!res.ok) return [];
-    return (res.data && res.data.projects) ? res.data.projects.map(mapRecruiterProject) : [];
-  }
-
-  async function loadRecruiterShortlists(projects) {
-    var shortlists = {};
-    await Promise.all((projects || []).map(async function (project) {
-      var res = await window.dropCVApi.getShortlist(project.id);
-      if (!res.ok) return;
-      shortlists[project.id] = (res.data && res.data.candidates ? res.data.candidates : []).map(mapCandidate);
-    }));
-    return shortlists;
-  }
-
-  async function loadRecruiterCandidates() {
-    var res = await window.dropCVApi.searchProfiles({ page: 1, limit: 48, sortBy: 'newest' });
-    if (!res.ok) return [];
-    return (res.data && res.data.profiles) ? res.data.profiles.map(function (row) {
-      return {
-        userId: row.userId,
-        id: row.userId,
-        name: row.fullName,
-        title: row.headline || row.jobTitle || '',
-        city: [row.city, row.country].filter(Boolean).join(', '),
-        skills: row.skills || [],
-        level: row.seniority || '',
-      };
-    }) : [];
-  }
-
-  async function initRecruiterDashboard() {
-    var user = await getCurrentUserFromSharedAuth();
-    if (!user) {
-      window.location.href = 'login.html';
-      return;
-    }
-    if (user.plan !== 'Recruiter') {
-      window.location.href = window.dropCV.getDashboardUrl(user.plan);
-      return;
-    }
-
-    window.currentUser = user;
-    loadDeploymentStatus(user);
-
-    var projects = await loadRecruiterProjects();
-    var shortlists = await loadRecruiterShortlists(projects);
-    var candidates = await loadRecruiterCandidates();
-
-    window.__dropcvProjects = projects;
-    window.__dropcvShortlists = shortlists;
-    window.__dropcvCandidates = candidates;
-
-    window.loadProjects = function () {
-      var grid = document.getElementById('projects-grid');
-      if (!grid) return;
-      if (!projects.length) {
-        grid.innerHTML = '<div class="empty-state"><div class="empty-state-icon">📁</div><p>No projects yet</p></div>';
-        return;
-      }
-      grid.innerHTML = projects.map(function (project) {
-        return '<div class="project-card" onclick="openProjectDetail(' + project.id + ')">' +
-          '<div class="project-header">' +
-            '<div class="project-name">' + project.name + '</div>' +
-            '<span class="status-badge ' + project.status + '">' + project.status + '</span>' +
-          '</div>' +
-          '<div class="project-meta">' +
-            '<div class="project-meta-item">📍 ' + (project.city || 'Remote') + '</div>' +
-            '<div class="project-meta-item">💼 ' + (project.isRemote ? 'Remote' : 'On-site') + '</div>' +
-          '</div>' +
-          '<div class="project-date">Created: ' + (project.createdAt ? new Date(project.createdAt).toLocaleDateString() : '—') + '</div>' +
-          '<div class="project-footer">' +
-            '<span style="font-size: 14px; color: var(--color-gray-text);">' + project.candidateCount + ' candidates</span>' +
-            '<span style="color: var(--color-purple); font-weight: 500;">Open →</span>' +
-          '</div>' +
-        '</div>';
-      }).join('');
-    };
-
-    window.loadDiscoveryCandidates = function () {
-      var container = document.getElementById('discovery-candidates');
-      if (!container) return;
-      if (!candidates.length) {
-        container.innerHTML = '<div class="empty-state"><div class="empty-state-icon">🔎</div><p>No candidates found</p></div>';
-        return;
-      }
-      container.innerHTML = candidates.map(function (candidate) {
-        return '<div class="candidate-card">' +
-          '<div class="candidate-avatar">' + (candidate.name ? candidate.name.split(' ').map(function (part) { return part[0] || ''; }).slice(0, 2).join('').toUpperCase() : '?') + '</div>' +
-          '<div class="candidate-info">' +
-            '<div class="candidate-name">' + candidate.name + '</div>' +
-            '<div class="candidate-title">' + candidate.title + '</div>' +
-            '<div class="candidate-location">📍 ' + candidate.city + '</div>' +
-            '<div style="margin-top: 4px;">' + (candidate.skills || []).slice(0, 3).map(function (skill) {
-              return '<span style="background: rgba(139, 92, 246, 0.1); color: var(--color-purple); padding: 2px 8px; border-radius: 4px; font-size: 11px; margin-right: 4px;">' + skill + '</span>';
-            }).join('') + '</div>' +
-          '</div>' +
-          '<div class="candidate-actions">' +
-            '<button class="btn btn-outline btn-sm" onclick="viewCandidateProfile(' + candidate.id + ')">View Profile</button>' +
-          '</div>' +
-        '</div>';
-      }).join('');
-    };
-
-    window.loadShortlists = function () {
-      var container = document.getElementById('shortlists-container');
-      if (!container) return;
-      if (!Object.keys(shortlists).length) {
-        container.innerHTML = '<div class="empty-state"><div class="empty-state-icon">⭐</div><p>No shortlisted candidates yet</p></div>';
-        return;
-      }
-      container.innerHTML = Object.entries(shortlists).map(function (entry) {
-        var projectId = entry[0];
-        var candidatesForProject = entry[1];
-        var project = projects.find(function (p) { return String(p.id) === String(projectId); });
-        if (!project || !candidatesForProject.length) return '';
-        return '<div class="shortlist-group">' +
-          '<div class="shortlist-group-header">' +
-            '<h3>' + project.name + '</h3>' +
-            '<span style="color: var(--color-gray-text);">' + candidatesForProject.length + ' candidates</span>' +
-          '</div>' +
-          '<table class="shortlist-table">' +
-            '<thead><tr><th>Candidate</th><th>Title</th><th>Location</th><th>Actions</th></tr></thead>' +
-            '<tbody>' + candidatesForProject.map(function (candidate) {
-              return '<tr>' +
-                '<td><strong>' + candidate.name + '</strong></td>' +
-                '<td>' + candidate.title + '</td>' +
-                '<td>' + candidate.city + '</td>' +
-                '<td><button class="btn btn-outline btn-sm" onclick="removeFromShortlist(' + project.id + ', ' + candidate.userId + ')">Remove</button></td>' +
-              '</tr>';
-            }).join('') + '</tbody>' +
-          '</table>' +
-        '</div>';
-      }).join('');
-    };
-
-    window.openProjectDetail = async function (projectId) {
-      var res = await window.dropCVApi.getProject(projectId);
-      if (!res.ok || !res.data || !res.data.project) return;
-      var project = mapRecruiterProject(res.data.project);
-      var candidates = (res.data.candidates || []).map(mapCandidate);
-      window.__dropcvCurrentProjectId = projectId;
-
-      document.getElementById('project-detail-name').textContent = project.name || 'Project';
-      document.getElementById('project-detail-status').textContent = project.status || 'active';
-      document.getElementById('project-detail-status').className = 'status-badge ' + (project.status || 'active');
-      document.getElementById('project-detail-dept').textContent = project.industry || '—';
-      document.getElementById('project-detail-type').textContent = project.isRemote ? 'Remote' : 'Hybrid';
-      document.getElementById('project-detail-location').textContent = project.city || 'Remote';
-      document.getElementById('project-detail-level').textContent = (project.seniorityLevels && project.seniorityLevels[0]) || '—';
-      document.getElementById('project-detail-salary').textContent = 'Not specified';
-      document.getElementById('project-detail-date').textContent = project.createdAt ? new Date(project.createdAt).toLocaleDateString() : '—';
-      document.getElementById('project-detail-description').textContent = project.notes || 'No description';
-      document.getElementById('project-notes').value = project.notes || '';
-      document.getElementById('edit-status').value = project.status || 'active';
-      document.getElementById('edit-description').value = project.notes || '';
-
-      var container = document.getElementById('project-candidates');
-      if (container) {
-        container.innerHTML = candidates.length ? candidates.map(function (candidate) {
-          return '<div class="candidate-card">' +
-            '<div class="candidate-avatar">' + (candidate.name ? candidate.name.split(' ').map(function (part) { return part[0] || ''; }).slice(0, 2).join('').toUpperCase() : '?') + '</div>' +
-            '<div class="candidate-info">' +
-              '<div class="candidate-name">' + candidate.name + '</div>' +
-              '<div class="candidate-title">' + candidate.title + '</div>' +
-              '<div class="candidate-location">📍 ' + candidate.city + '</div>' +
-            '</div>' +
-            '<div class="candidate-actions"><button class="btn btn-primary btn-sm" onclick="addToShortlist(' + candidate.userId + ', ' + project.id + ')">+ Add to Shortlist</button></div>' +
-          '</div>';
-        }).join('') : '<div class="empty-state"><p>No candidates found</p></div>';
-      }
-
-      navigateToSection('project-detail');
-    };
-
-    window.addToShortlist = async function (candidateId, projectId) {
-      var res = await window.dropCVApi.addToShortlist(projectId, candidateId);
-      if (res.ok) {
-        await initRecruiterDashboard();
-        await window.openProjectDetail(projectId);
-        return;
-      }
-      alert(res.error || 'Could not add candidate');
-    };
-
-    window.removeFromShortlist = async function (projectId, candidateId) {
-      var res = await window.dropCVApi.removeFromShortlist(projectId, candidateId);
-      if (res.ok) {
-        await initRecruiterDashboard();
-        loadShortlists();
-        if (window.__dropcvCurrentProjectId) {
-          await window.openProjectDetail(window.__dropcvCurrentProjectId);
-        }
-        return;
-      }
-      alert(res.error || 'Could not remove candidate');
-    };
-
-    window.createProject = async function () {
-      var name = document.getElementById('new-project-name').value.trim();
-      if (!name) {
-        alert('Project name is required');
-        return;
-      }
-      var payload = {
-        name: name,
-        roleTitle: document.getElementById('new-project-name').value.trim(),
-        industry: document.getElementById('new-project-dept').value || null,
-        seniorityLevels: [document.getElementById('new-project-level').value].filter(Boolean),
-        city: document.getElementById('new-project-location').value || null,
-        isRemote: (document.getElementById('new-project-location').value || '').toLowerCase() === 'remote',
-        notes: document.getElementById('new-project-description').value || null,
-      };
-      var res = await window.dropCVApi.createProject(payload);
-      if (!res.ok) {
-        alert(res.error || 'Could not create project');
-        return;
-      }
-      closeNewProjectModal();
-      await initRecruiterDashboard();
-      loadProjects();
-    };
-
-    window.saveProjectNotes = async function () {
-      var projectId = window.__dropcvCurrentProjectId;
-      if (!projectId) return;
-      var res = await window.dropCVApi.updateProject(projectId, {
-        notes: document.getElementById('project-notes').value,
-      });
-      if (!res.ok) alert(res.error || 'Could not save notes');
-    };
-
-    window.updateProject = async function () {
-      var projectId = window.__dropcvCurrentProjectId;
-      if (!projectId) return;
-      var res = await window.dropCVApi.updateProject(projectId, {
-        status: document.getElementById('edit-status').value,
-        notes: document.getElementById('edit-description').value,
-      });
-      if (!res.ok) {
-        alert(res.error || 'Could not update project');
-        return;
-      }
-      await initRecruiterDashboard();
-      await window.openProjectDetail(projectId);
-    };
-
-    window.deleteProject = async function () {
-      var projectId = window.__dropcvCurrentProjectId;
-      if (!projectId) return;
-      if (!confirm('Are you sure you want to delete this project? This action cannot be undone.')) return;
-      var res = await window.dropCVApi.deleteProject(projectId);
-      if (!res.ok) {
-        alert(res.error || 'Could not delete project');
-        return;
-      }
-      closeProjectDetail();
-      await initRecruiterDashboard();
-    };
-
-    window.loadProjects = function () {
-      var grid = document.getElementById('projects-grid');
-      if (!grid) return;
-      if (!projects.length) {
-        grid.innerHTML = '<div class="empty-state"><div class="empty-state-icon">📁</div><p>No projects yet</p></div>';
-        return;
-      }
-      grid.innerHTML = projects.map(function (project) {
-        return '<div class="project-card" onclick="openProjectDetail(' + project.id + ')">' +
-          '<div class="project-header"><div class="project-name">' + project.name + '</div><span class="status-badge ' + project.status + '">' + project.status + '</span></div>' +
-          '<div class="project-meta"><div class="project-meta-item">📍 ' + (project.city || 'Remote') + '</div><div class="project-meta-item">💼 ' + (project.isRemote ? 'Remote' : 'On-site') + '</div></div>' +
-          '<div class="project-date">Created: ' + (project.createdAt ? new Date(project.createdAt).toLocaleDateString() : '—') + '</div>' +
-          '<div class="project-footer"><span style="font-size: 14px; color: var(--color-gray-text);">' + project.candidateCount + ' candidates</span><span style="color: var(--color-purple); font-weight: 500;">Open →</span></div>' +
-        '</div>';
-      }).join('');
-    };
-
-    window.saveProjects = function () {};
-    window.saveShortlists = function () {};
-    window.viewCandidateProfile = function (candidateId) {
-      var candidate = (window.__dropcvCandidates || []).find(function (c) { return String(c.id) === String(candidateId); });
-      if (candidate) {
-        alert(candidate.name + '\n' + candidate.title + '\n' + candidate.city);
-      }
-    };
-
-    window.saveCompanyProfile = function () {
-      var profile = window.currentUser && window.currentUser.profile ? window.currentUser.profile : {};
-      var companyInput = document.getElementById('company-name-input');
-      profile.companyName = (companyInput && companyInput.value) || profile.companyName || '';
-      if (window.currentUser) {
-        window.currentUser.profile = profile;
-      }
-      alert('Company profile saved!');
-    };
-
-  }
-
-    function bootstrapDashboard() {
-      if (!isDashboardFile()) return;
-    if (currentFile() === 'dashboard-recruiter.html') {
-      initRecruiterDashboard().then(function () {
-        if (window.loadProjects) window.loadProjects();
-        if (window.loadDiscoveryCandidates) window.loadDiscoveryCandidates();
-        if (window.loadShortlists) window.loadShortlists();
-        setDashboardReady();
-      });
-    } else {
-      initProfessionalDashboard();
-    }
-  }
-
-    if (document.readyState === 'loading') {
-      window.addEventListener('DOMContentLoaded', bootstrapDashboard);
-    } else {
-      bootstrapDashboard();
-    }

@@ -39,7 +39,7 @@
       <div class="nav-links">
         <a href="index.html#how-it-works">How it works</a>
         <a href="index.html#pricing">Pricing</a>
-        <a href="discovery.html">Discovery</a>
+        <a href="index.html#pricing">Pricing</a>
         <a href="login.html">Log in</a>
       </div>
     </nav>
@@ -61,10 +61,11 @@
       <div class="footer-links">
         <a href="index.html#how-it-works">How it works</a>
         <a href="index.html#pricing">Pricing</a>
-        <a href="discovery.html">Discovery</a>
+        <a href="signup.html">Sign up</a>
       </div>
     </div>
-    <div class="footer-bottom">© 2025 drop.cv. All rights reserved.</div>
+    <div class="footer-bottom">© <span id="footerYear">2025</span> drop.cv. All rights reserved.</div>
   </footer>
+  <script>document.getElementById('footerYear').textContent = new Date().getFullYear();</script>
 </body>
 </html>

@@ -29,6 +29,13 @@
       .replace(/'/g, '&#39;');
   }
 
+  function normalizePublicUrl(value) {
+    var raw = String(value == null ? '' : value).trim();
+    if (!raw) return '';
+    if (/^https?:\/\//i.test(raw)) return raw;
+    return 'https://' + raw.replace(/^\/+/, '');
+  }
+
   // ---------- Shared styles (injected once) ----------
   var STYLE_ID = 'dropcv-upload-styles';
   function injectStyles() {
@@ -535,7 +542,7 @@
     // Step 1: Upload (brief confirmation)
     setFill(0, 'Uploading files...');
     setTimeout(function () {
-      setFill(40, 'Deploying to your subdomain...');
+      setFill(40, 'Publishing your live site...');
       // Step 2: Deploy (brief confirmation)
       setTimeout(function () {
         setFill(80, 'Going live...');
@@ -662,9 +669,10 @@
     if (currentUser) {
       userUrl =
         (currentUser.publicUrl) ||
+        (currentUser.domains && currentUser.domains[0] && normalizePublicUrl(currentUser.domains[0].public_url)) ||
         (window.dropCV && typeof window.dropCV.getPublicUrl === 'function' ? window.dropCV.getPublicUrl(currentUser) : '') ||
         (currentUser.domains && currentUser.domains[0] && currentUser.domains[0].full_url) ||
-        (currentUser.slug ? currentUser.slug + '.drop.cv' : '') ||
+        (currentUser.slug ? 'https://drop-cv-backend.vercel.app/site/' + currentUser.slug + '/' : '') ||
         '';
     }
 

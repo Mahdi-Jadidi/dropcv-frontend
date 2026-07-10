@@ -20,6 +20,13 @@
       .replace(/'/g, '&#39;');
   }
 
+  function normalizePublicUrl(value) {
+    var raw = String(value == null ? '' : value).trim();
+    if (!raw) return '';
+    if (/^https?:\/\//i.test(raw)) return raw;
+    return 'https://' + raw.replace(/^\/+/, '');
+  }
+
   function setText(selector, value) {
     document.querySelectorAll(selector).forEach(function (el) {
       el.textContent = value;
@@ -205,7 +212,7 @@
 
   function getUserUrl(user) {
     var domain = getPrimaryDomain(user);
-    return (user && user.publicUrl) || (domain && (domain.public_url || domain.full_url)) || (user && user.slug ? user.slug + '.drop.cv' : '');
+    return (user && user.publicUrl) || (domain && normalizePublicUrl(domain.public_url || domain.full_url)) || (user && user.slug ? ('https://drop-cv-backend.vercel.app/site/' + user.slug + '/') : '');
   }
 
   async function getCurrentUserFromSharedAuth() {
@@ -247,7 +254,7 @@
     }
 
     domainList.innerHTML = domains.map(function (d) {
-      var fullUrl = d.public_url || d.full_url || (d.slug ? d.slug + '.drop.cv' : '');
+      var fullUrl = normalizePublicUrl(d.public_url || d.full_url || (d.slug ? ('drop-cv-backend.vercel.app/site/' + d.slug + '/') : ''));
       var safeUrl = escapeHtml(fullUrl);
       return [
         '<div class="domain-row">',
@@ -255,7 +262,7 @@
           d.is_primary ? '<span class="badge badge-green">Primary</span>' : '',
           '<span class="live-dot-green"></span>',
           '<button class="btn-sm" type="button" data-copy-domain="' + safeUrl + '">Copy</button>',
-          '<a href="https://' + safeUrl + '" target="_blank" rel="noreferrer" class="btn-sm">Visit &rarr;</a>',
+          '<a href="' + safeUrl + '" target="_blank" rel="noreferrer" class="btn-sm">Visit &rarr;</a>',
         '</div>',
       ].join('');
     }).join('');
@@ -386,12 +393,12 @@
     setText('#siteStatusValue', url ? 'Live' : 'Not published');
     setText('#siteStatusDetail', url ? 'Your public link is active' : 'Publish your site to activate your link');
     if (url) {
-      setHref('[data-user-url]', 'https://' + url);
+      setHref('[data-user-url]', url);
     }
 
     if (statusHost && window.dropcvUpload) {
       window.dropcvUpload.renderStatusCard(statusHost, {
-        visitHref: 'https://' + url,
+        visitHref: url,
         onGoToSite: function () {
           var siteLink = document.querySelector('.nav-link[data-section="site"]');
           if (siteLink) siteLink.click();
@@ -406,7 +413,7 @@
       var updatedEl = document.getElementById('current-status-updated');
       if (updatedEl) updatedEl.textContent = 'Last updated: just now';
       var visitEl = document.getElementById('current-status-visit');
-      if (visitEl) visitEl.href = url ? ('https://' + url) : '#';
+      if (visitEl) visitEl.href = url || '#';
     }
   }
 

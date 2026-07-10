@@ -1123,7 +1123,7 @@
           <!-- Tab 1: Upload your site -->
           <div class="dropcv-tab-content active" id="site-tab-files">
             <h2 style="font-size:20px;font-weight:700;margin:0 0 8px;color:var(--color-black);">Upload your site</h2>
-            <p style="font-size:15px;color:var(--color-gray-text);margin:0 0 20px;">Upload HTML, CSS, JS, ZIP, PDF, or DOCX files and we'll publish them to your subdomain instantly.</p>
+            <p style="font-size:15px;color:var(--color-gray-text);margin:0 0 20px;">Upload HTML, CSS, JS, ZIP, PDF, or DOCX files and we'll publish them to your live site instantly.</p>
             <div id="files-upload-zone"></div>
             <div id="files-formats"></div>
             <button class="dropcv-deploy-btn" id="files-deploy-btn" type="button" disabled>Go live â†’</button>
@@ -1195,7 +1195,7 @@
         <!-- Domains Section -->
         <section class="section" id="domains">
           <h1>Domains</h1>
-          <p class="subheading">Manage your subdomains</p>
+          <p class="subheading">Manage your live site links</p>
 
           <div class="domain-item">
             <div class="domain-header">
@@ -1525,7 +1525,7 @@
     // Copy URL
     function copyURL() {
       const urlText = document.getElementById('user-url').textContent;
-      navigator.clipboard.writeText('https://' + urlText).then(() => {
+      navigator.clipboard.writeText(urlText).then(() => {
         alert('URL copied to clipboard!');
       });
     }
@@ -1533,7 +1533,7 @@
     // Show QR Code
     function showQRCode() {
       const urlText = document.getElementById('user-url').textContent;
-      alert(`QR Code for https://${urlText} would be displayed here.\nIn production, this would generate a scannable QR code.`);
+      alert(`QR Code for ${urlText} would be displayed here.\nIn production, this would generate a scannable QR code.`);
     }
 
     // Download PDF
@@ -1643,13 +1643,13 @@
     function initDropcvUpload() {
       if (!window.dropcvUpload) return;
 
-      // Resolve the user's subdomain URL from the shared auth record.
-      var userURL = 'yourname.drop.cv';
+      // Resolve the user's live site URL from the shared auth record.
+      var userURL = 'https://drop-cv-backend.vercel.app/site/yourname/';
       if (window.currentUser) {
         userURL =
           window.currentUser.publicUrl ||
           (window.currentUser.domains && window.currentUser.domains[0] && window.currentUser.domains[0].full_url) ||
-          (window.currentUser.slug ? window.currentUser.slug + '.drop.cv' : '') ||
+          (window.currentUser.slug ? 'https://drop-cv-backend.vercel.app/site/' + window.currentUser.slug + '/' : '') ||
           userURL;
       }
 
@@ -1750,7 +1750,7 @@
             url: userURL,
             method: 'files',
             title: 'Your site is live!',
-            visitHref: (window.location.protocol === 'http:' ? 'http://' : 'https://') + userURL,
+            visitHref: userURL,
             onDone: function () {
               // Re-enable so the user can redeploy after editing files.
               filesDeployBtn.disabled = false;
@@ -1883,7 +1883,7 @@
           { label: 'Reading your CV...', duration: 1500 },
           { label: 'Extracting your information...', duration: 2000 },
           { label: 'Building your resume site...', duration: 2000 },
-          { label: 'Publishing to your subdomain...', duration: 1000 }
+          { label: 'Publishing your live site...', duration: 1000 }
         ]);
 
         try {

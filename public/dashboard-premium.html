@@ -1344,7 +1344,7 @@
         <!-- Domains Section -->
         <section class="section" id="domains">
           <h1>Domains</h1>
-          <p class="subheading">Manage your subdomains</p>
+          <p class="subheading">Manage your live site links</p>
 
           <div class="domain-item">
             <div class="domain-header">
@@ -1380,7 +1380,7 @@
           <div class="domain-item">
             <div class="domain-header">
               <div class="domain-info">
-                <div class="domain-name">portfolio.drop.cv</div>
+                <div class="domain-name">drop-cv-backend.vercel.app/site/portfolio/</div>
                 <div class="domain-status">
                   <span class="status-dot"></span> Live
                 </div>
@@ -1706,7 +1706,7 @@
     // Copy URL
     function copyURL() {
       const urlText = document.getElementById('user-url').textContent;
-      navigator.clipboard.writeText('https://' + urlText).then(() => {
+      navigator.clipboard.writeText(urlText).then(() => {
         alert('URL copied to clipboard!');
       });
     }
@@ -1714,7 +1714,7 @@
     // Show QR Code
     function showQRCode() {
       const urlText = document.getElementById('user-url').textContent;
-      alert(`QR Code for https://${urlText} would be displayed here.\nIn production, this would generate a scannable QR code.`);
+      alert(`QR Code for ${urlText} would be displayed here.\nIn production, this would generate a scannable QR code.`);
     }
 
     // Download PDF
@@ -1830,13 +1830,13 @@
         var U = window.dropcvUpload;
         U.injectStyles();
 
-        var userURL = 'yourname.drop.cv';
+        var userURL = 'https://drop-cv-backend.vercel.app/site/yourname/';
         if (window.currentUser) {
           var u = window.currentUser;
           userURL =
             u.publicUrl ||
             (u.domains && u.domains[0] && u.domains[0].full_url) ||
-            (u.slug ? u.slug + '.drop.cv' : '') ||
+            (u.slug ? 'https://drop-cv-backend.vercel.app/site/' + u.slug + '/' : '') ||
             userURL;
         }
 
@@ -2042,7 +2042,7 @@
                 url: userURL,
                 method: 'files',
                 title: 'Your site is live!',
-                visitHref: (window.location.protocol === 'http:' ? 'http://' : 'https://') + userURL,
+                visitHref: userURL,
                 onDone: function () { deployBtn.disabled = false; }
               });
             } catch (error) {
@@ -2130,14 +2130,14 @@
                 { label: 'Reading your CV...', duration: 1500 },
                 { label: 'Extracting your information...', duration: 2000 },
                 { label: 'Building your resume site...', duration: 2000 },
-                { label: 'Publishing to your subdomain...', duration: 1000 }
+                { label: 'Publishing your live site...', duration: 1000 }
               ], function () {
                 (async function () {
                   try {
                     await waitForDeploymentReady(deploymentId);
                     U.setDeployment({ deployed: true, url: userURL, updatedAt: 'just now', method: 'pdf', timestamp: Date.now() });
                     U.refreshAllStatusCards();
-                    U.renderSuccessCard(result, { title: 'Your resume site is live!', url: userURL, visitHref: 'https://' + userURL });
+                    U.renderSuccessCard(result, { title: 'Your resume site is live!', url: userURL, visitHref: userURL });
                     var link = el('p', { style: 'text-align:center;margin-top:14px;font-size:14px;color:#666;' });
                     link.appendChild(document.createTextNode('Update your CV? '));
                     var a = el('a', { href: '#', className: 'dropcv-reupload-link', style: 'color:#0F6E56;font-weight:600;', textContent: 'Upload a new file to regenerate your site ->' });
@@ -2322,7 +2322,7 @@
                 { label: 'Reading your story...', duration: 1000 },
                 { label: 'Writing your professional CV...', duration: 2500 },
                 { label: 'Designing your resume site...', duration: 2000 },
-                { label: 'Publishing to your subdomain...', duration: 1000 }
+                { label: 'Publishing your live site...', duration: 1000 }
               ], function () {
                 (async function () {
                   try {
@@ -2333,7 +2333,7 @@
                     storyResult.innerHTML = '';
                     var successWrap = el('div');
                     storyResult.appendChild(successWrap);
-                    U.renderSuccessCard(successWrap, { title: 'Your site is live!', url: userURL, visitHref: 'https://' + userURL });
+                    U.renderSuccessCard(successWrap, { title: 'Your site is live!', url: userURL, visitHref: userURL });
                     storyResult.appendChild(el('h3', { style: 'font-size:20px;font-weight:700;margin:18px 0 12px;', textContent: "Here's what we created for you" }));
 
                     var previewWrap = el('div');
@@ -2348,7 +2348,7 @@
                     storyResult.appendChild(btnWrap);
 
                     openBtn.addEventListener('click', function () {
-                      window.open('https://' + userURL, '_blank', 'noopener');
+                      window.open(userURL, '_blank', 'noopener');
                     });
                     editBtn.addEventListener('click', function () {
                       var h = document.getElementById('story-form-heading');

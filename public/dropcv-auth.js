@@ -74,7 +74,7 @@
     return (
       user.publicUrl ||
       user.domains?.[0]?.full_url ||
-      (user.slug ? `${user.slug}.drop.cv` : '')
+      (user.slug ? `https://drop-cv-backend.vercel.app/site/${user.slug}/` : '')
     );
   }
 

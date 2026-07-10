@@ -1123,7 +1123,7 @@
           <!-- Tab 1: Upload your site -->
           <div class="dropcv-tab-content active" id="site-tab-files">
             <h2 style="font-size:20px;font-weight:700;margin:0 0 8px;color:var(--color-black);">Upload your site</h2>
-            <p style="font-size:15px;color:var(--color-gray-text);margin:0 0 20px;">Upload your HTML/CSS/JS files and we'll publish them to your subdomain instantly.</p>
+            <p style="font-size:15px;color:var(--color-gray-text);margin:0 0 20px;">Upload HTML, CSS, JS, ZIP, PDF, or DOCX files and we'll publish them to your subdomain instantly.</p>
             <div id="files-upload-zone"></div>
             <div id="files-formats"></div>
             <button class="dropcv-deploy-btn" id="files-deploy-btn" type="button" disabled>Go live â†’</button>
@@ -1133,7 +1133,7 @@
           <!-- Tab 2: Upload your CV -->
           <div class="dropcv-tab-content" id="site-tab-cv">
             <h2 style="font-size:20px;font-weight:700;margin:0 0 8px;color:var(--color-black);">Upload your CV</h2>
-            <p style="font-size:15px;color:var(--color-gray-text);margin:0 0 20px;">We'll convert your PDF, Word, or text CV into a professional resume website automatically.</p>
+            <p style="font-size:15px;color:var(--color-gray-text);margin:0 0 20px;">We'll convert your PDF or DOCX CV into a professional resume website automatically.</p>
             <div id="cv-upload-zone"></div>
             <div id="cv-formats"></div>
             <button class="dropcv-deploy-btn" id="cv-convert-btn" type="button" disabled>Convert &amp; publish â†’</button>
@@ -1660,15 +1660,13 @@
         upgradeHost.innerHTML = '';
         upgradeHost.appendChild(
           window.dropcvUpload.createUpgradeCard(
-            'Premium unlocks site uploads',
-            'Upload HTML/CSS/JS, ZIP bundles, or PDF/DOCX resumes and publish them to your subdomain.',
+            'Premium unlocks text brief uploads',
+            'Standard covers site files, ZIP bundles, PDF, and DOCX uploads. Premium adds text briefs and story-based generation.',
             'Upgrade to Premium →',
             'signup.html?plan=Premium'
           )
         );
       }
-
-      return;
 
       // ---------- Tab bar ----------
       var tabBarHost = document.getElementById('site-tab-bar');
@@ -1695,14 +1693,16 @@
       var filesFormats   = document.getElementById('files-formats');
 
       var filesZone = window.dropcvUpload.createUploadZone({
-        accept: '.html,.htm',
-        formatsText: 'Accepted formats: .html .htm - Max 10MB',
-        onChange: function (file) {
-          filesDeployBtn.disabled = !file;
+        accept: '.html,.htm,.css,.js,.zip,.pdf,.docx',
+        multiple: true,
+        formatsText: 'Accepted formats: .html .htm .css .js .zip .pdf .docx — Max 25MB',
+        onChange: function (files) {
+          filesDeployBtn.disabled = !files || !files.length;
         }
       });
       filesZoneHost.appendChild(filesZone.el);
       filesFormats.appendChild(filesZone.formatsEl);
+      filesZone.formatsEl.textContent = 'Accepted formats: .html .htm .css .js .zip .pdf .docx — Max 25MB';
 
       function escapeFilesHtml(value) {
         return String(value == null ? '' : value)
@@ -1715,11 +1715,11 @@
 
       filesDeployBtn.addEventListener('click', async function () {
         if (filesDeployBtn.disabled) return;
-        var file = filesZone.getFile();
-        if (!file) return;
+        var files = filesZone.getFiles ? filesZone.getFiles() : [filesZone.getFile()].filter(Boolean);
+        if (!files.length) return;
         filesDeployBtn.disabled = true;
         try {
-          var response = await window.dropCVApi.uploadSite(file);
+          var response = await window.dropCVApi.uploadSite({ files: files });
           if (!response.ok || !response.data || !response.data.deploymentId) {
             var uploadError = new Error(response.error || 'Upload failed');
             uploadError.statusCode = response.status;
@@ -1750,14 +1750,15 @@
       var cvFormats    = document.getElementById('cv-formats');
 
       var cvZone = window.dropcvUpload.createUploadZone({
-        accept: '.pdf,.doc,.docx,.txt',
-        formatsText: 'Accepted formats: .html .htm - Max 10MB',
+        accept: '.pdf,.docx',
+        formatsText: 'Accepted formats: .pdf .docx — Max 20MB',
         onChange: function (file) {
           cvConvertBtn.disabled = !file || isCvLimitReached();
         }
       });
       cvZoneHost.appendChild(cvZone.el);
       cvFormats.appendChild(cvZone.formatsEl);
+      cvZone.formatsEl.textContent = 'Accepted formats: .pdf .docx — Max 20MB';
 
       var cvUsageEl = document.createElement('div');
       cvUsageEl.style.marginTop = '12px';

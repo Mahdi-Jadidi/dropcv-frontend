@@ -136,6 +136,11 @@ window.dropCVApi = {
   async requestPayment(plan) {
     return this.request('POST', '/api/payments/request', { plan });
   },
+  getDashboardUrl(plan) {
+    return String(plan) === 'Premium'
+      ? 'dashboard-premium.html'
+      : 'dashboard-standard.html';
+  },
   async unpublishSite(deploymentId) {
     return this.request('POST', `/api/sites/${deploymentId}/unpublish`);
   },

@@ -43,6 +43,11 @@ const context = await browser.newContext({
 const page = await context.newPage();
 const pageErrors = [];
 const consoleErrors = [];
+const runId = Date.now().toString(36);
+const slug = `qa-smoke-${runId}`;
+const email = `${slug}@test.drop.cv`;
+const password = 'Password123!';
+const fullName = 'QA Smoke Tester';
 
 page.on('pageerror', (error) => {
   pageErrors.push(error.message);
@@ -93,10 +98,10 @@ try {
   await page.waitForSelector('#fullName');
   await expectNoRuntimeErrors('Signup step 2');
 
-  await page.locator('#fullName').fill('QA Smoke Tester');
-  await page.locator('#slug').fill('qa-smoke-tester');
-  await page.locator('#email').fill('qa-smoke@example.com');
-  await page.locator('#password').fill('Password123!');
+  await page.locator('#fullName').fill(fullName);
+  await page.locator('#slug').fill(slug);
+  await page.locator('#email').fill(email);
+  await page.locator('#password').fill(password);
   await page.locator('#passwordToggle').click();
   assert.equal(await page.locator('#password').getAttribute('type'), 'text', 'Password toggle should reveal the password');
   await page.locator('#passwordToggle').click();
@@ -122,7 +127,47 @@ try {
   assert.equal(await page.locator('input[type="password"]').count(), 1, 'Login page should require a password field');
   await expectNoRuntimeErrors('Login page');
 
-  console.log('Live browser smoke passed: homepage, signup flow, and login entry point all loaded cleanly.');
+  await page.goto(resolveLiveUrl(LIVE_FRONTEND_ORIGIN, '/signup.html'), {
+    waitUntil: 'domcontentloaded',
+    timeout: 60000,
+  });
+  await waitForFrontendBoot(page);
+  await page.waitForSelector('section[data-step="1"] button[data-plan="Premium"]');
+  await page.locator('section[data-step="1"] button[data-plan="Premium"]').click();
+  await page.locator('section[data-step="1"] button[data-next]').click();
+  await page.waitForSelector('#registerBtn');
+  await page.locator('#fullName').fill(fullName);
+  await page.locator('#slug').fill(slug);
+  await page.locator('#email').fill(email);
+  await page.locator('#password').fill(password);
+
+  await Promise.all([
+    page.waitForURL('**/dashboard-premium.html', { waitUntil: 'domcontentloaded', timeout: 60000 }),
+    page.locator('#registerBtn').click(),
+  ]);
+  assert.ok(page.url().includes('/dashboard-premium.html'), 'Signup should redirect to the premium dashboard');
+  await page.waitForSelector('.sign-out-link');
+
+  await Promise.all([
+    page.waitForNavigation({ waitUntil: 'domcontentloaded', timeout: 30000 }).catch(() => null),
+    page.locator('.sign-out-link').click(),
+  ]);
+
+  await page.goto(resolveLiveUrl(LIVE_FRONTEND_ORIGIN, '/login.html'), {
+    waitUntil: 'domcontentloaded',
+    timeout: 60000,
+  });
+  await page.waitForSelector('#form');
+  await page.locator('#email').fill(email);
+  await page.locator('#password').fill(password);
+
+  await Promise.all([
+    page.waitForURL('**/dashboard-premium.html', { waitUntil: 'domcontentloaded', timeout: 60000 }),
+    page.locator('#submit').click(),
+  ]);
+  assert.ok(page.url().includes('/dashboard-premium.html'), 'Login should redirect to the premium dashboard');
+
+  console.log('Live browser smoke passed: homepage, signup redirect, login page, and dashboard login all loaded cleanly.');
 } finally {
   await context.close();
   await browser.close();

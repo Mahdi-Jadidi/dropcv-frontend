@@ -1929,23 +1929,23 @@
         (function buildTab1() {
           var tab = el('div', { className: 'dropcv-tab-content active' });
           tab.appendChild(el('h2', { className: 'dropcv-story-heading', textContent: 'Upload your site' }));
-          tab.appendChild(el('p', { className: 'dropcv-story-sub', textContent: "Upload HTML/CSS/JS files, a ZIP bundle, or a PDF/DOCX resume. We'll publish site files directly or generate a polished resume site for you." }));
+          tab.appendChild(el('p', { className: 'dropcv-story-sub', textContent: "Upload HTML/CSS/JS files, a ZIP bundle, a PDF/DOCX resume, or a text brief. We'll publish site files directly or generate a polished resume site for you." }));
 
           var zoneWrap = el('div');
           var zone = U.createUploadZone({
-            accept: '.html,.htm,.css,.js,.zip,.pdf,.doc,.docx,.txt',
+            accept: '.html,.htm,.css,.js,.zip,.pdf,.docx,.txt',
             multiple: true,
-            formatsText: 'Accepted formats: .html .css .js .zip — Max 10MB',
+            formatsText: 'Accepted formats: .html .htm .css .js .zip .pdf .docx .txt — Max 25MB',
             onChange: function (file) { deployBtn.disabled = !file || (Array.isArray(file) && file.length === 0); }
           });
           zoneWrap.appendChild(zone.el);
           zoneWrap.appendChild(zone.formatsEl);
           tab.appendChild(zoneWrap);
-          zone.formatsEl.textContent = 'Accepted formats: .html .htm .css .js .zip .pdf .doc .docx .txt — Max 25MB';
+          zone.formatsEl.textContent = 'Accepted formats: .html .htm .css .js .zip .pdf .docx .txt — Max 25MB';
 
           var briefCard = el('div', { className: 'card', style: 'margin-top:18px;border:1px solid var(--color-gray-light);padding:18px;' });
           briefCard.appendChild(el('h3', { textContent: 'Optional site brief', style: 'margin-bottom:8px;' }));
-          briefCard.appendChild(el('p', { textContent: 'These details help the generator when you upload a PDF or Word resume. They are also saved as site metadata for direct uploads.', style: 'font-size:14px;color:var(--color-gray-text);margin-bottom:16px;' }));
+          briefCard.appendChild(el('p', { textContent: 'These details help the generator when you upload a PDF, DOCX, ZIP, or text brief. They are also saved as site metadata for direct uploads.', style: 'font-size:14px;color:var(--color-gray-text);margin-bottom:16px;' }));
 
           var briefGrid = el('div', { style: 'display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;' });
           briefGrid.appendChild(el('div', { className: 'form-group' }, [
@@ -2040,17 +2040,18 @@
         (function buildTab2() {
           var tab = el('div', { className: 'dropcv-tab-content' });
           tab.appendChild(el('h2', { className: 'dropcv-story-heading', textContent: 'Upload your CV' }));
-          tab.appendChild(el('p', { className: 'dropcv-story-sub', textContent: "We'll convert your PDF, Word, or text CV into a professional resume website automatically." }));
+          tab.appendChild(el('p', { className: 'dropcv-story-sub', textContent: "We'll convert your PDF, DOCX, or text CV into a professional resume website automatically." }));
 
           var zoneWrap = el('div');
           var zone = U.createUploadZone({
-            accept: '.pdf,.doc,.docx,.txt',
-            formatsText: 'Accepted formats: .pdf .doc .docx .txt — Max 20MB',
+            accept: '.pdf,.docx,.txt',
+            formatsText: 'Accepted formats: .pdf .docx .txt — Max 20MB',
             onChange: function (file) { convertBtn.disabled = !file || isModeLimited(getCvMode()); }
           });
           zoneWrap.appendChild(zone.el);
           zoneWrap.appendChild(zone.formatsEl);
           tab.appendChild(zoneWrap);
+          zone.formatsEl.textContent = 'Accepted formats: .pdf .docx .txt — Max 20MB';
 
           var convertBtn = el('button', { className: 'dropcv-deploy-btn', type: 'button', disabled: true, textContent: 'Convert & publish →' });
           tab.appendChild(convertBtn);

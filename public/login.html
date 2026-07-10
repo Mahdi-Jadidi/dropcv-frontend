@@ -133,6 +133,23 @@
   </script>
   <script type="module" src="auth-motion.mjs"></script>
   <script>
+    function getDashboardUrl(plan) {
+      if (window.dropCVApi && typeof window.dropCVApi.getDashboardUrl === 'function') {
+        return window.dropCVApi.getDashboardUrl(plan);
+      }
+
+      return String(plan) === 'Premium' ? 'dashboard-premium.html' : 'dashboard-standard.html';
+    }
+
+    (async function redirectIfAlreadySignedIn() {
+      try {
+        var currentUser = await dropCVApi.getCurrentUser();
+        if (currentUser) {
+          location.replace(getDashboardUrl(currentUser.plan));
+        }
+      } catch (error) {}
+    })();
+
     document.getElementById('form').addEventListener('submit', async function (e) {
       e.preventDefault();
 
@@ -153,7 +170,7 @@
       submitButton.textContent = initialLabel;
 
       if (response.ok) {
-        location.href = 'dashboard-standard.html';
+        location.replace(getDashboardUrl(response.data && response.data.user && response.data.user.plan));
         return;
       }
 

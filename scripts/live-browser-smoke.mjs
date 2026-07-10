@@ -67,17 +67,24 @@ async function expectNoRuntimeErrors(label) {
   }
 }
 
-try {
-  await page.goto(resolveLiveUrl(LIVE_FRONTEND_ORIGIN, '/'), { waitUntil: 'domcontentloaded' });
-  await page.waitForSelector('a[href="signup.html"]');
-  await page.waitForFunction(
+async function waitForFrontendBoot(pageInstance) {
+  await pageInstance.waitForFunction(
     (expectedApiBase) => window.dropCVConfig && window.dropCVConfig.apiBaseUrl === expectedApiBase,
     LIVE_FRONTEND_API_BASE,
   );
-  await page.waitForFunction(() => {
-    const amount = document.querySelector('[data-dropcv-plan-amount="Standard"]');
+  await pageInstance.waitForFunction(() => {
+    const amount =
+      document.querySelector('[data-dropcv-plan-amount="Standard"]') ||
+      document.querySelector('[data-dropcv-plan-amount="Premium"]');
     return amount && !/loading price/i.test(amount.textContent || '');
   });
+  await pageInstance.waitForTimeout(1000);
+}
+
+try {
+  await page.goto(resolveLiveUrl(LIVE_FRONTEND_ORIGIN, '/'), { waitUntil: 'domcontentloaded' });
+  await page.waitForSelector('a[href="signup.html"]');
+  await waitForFrontendBoot(page);
   await expectNoRuntimeErrors('Homepage');
 
   const homeConfig = await page.evaluate(() => window.dropCVConfig?.apiBaseUrl || '');
@@ -89,10 +96,7 @@ try {
   ]);
   assert.ok(page.url().includes('/signup.html'), 'Signup link should navigate to the signup page');
   await page.waitForSelector('section[data-step="1"] button[data-plan="Premium"]');
-  await page.waitForFunction(
-    (expectedApiBase) => window.dropCVConfig && window.dropCVConfig.apiBaseUrl === expectedApiBase,
-    LIVE_FRONTEND_API_BASE,
-  );
+  await waitForFrontendBoot(page);
   await page.locator('section[data-step="1"] button[data-plan="Premium"]').click();
   await page.locator('section[data-step="1"] button[data-next]').click();
   await page.waitForSelector('#fullName');

@@ -1,4 +1,4 @@
-import { cpSync, existsSync, mkdirSync, rmSync, writeFileSync } from 'node:fs';
+import { cpSync, existsSync, mkdirSync, writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { execFileSync } from 'node:child_process';
 import { createRequire } from 'node:module';
@@ -25,8 +25,6 @@ if (apiBaseUrl) {
     productionConfigPath,
     `window.dropCVConfig = window.dropCVConfig || {};\nwindow.dropCVConfig.apiBaseUrl = ${JSON.stringify(apiBaseUrl)};\n`,
   );
-} else if (existsSync(productionConfigPath)) {
-  rmSync(productionConfigPath, { force: true });
 }
 
 execFileSync(process.execPath, [nextBin, 'build', '--webpack'], { stdio: 'inherit' });

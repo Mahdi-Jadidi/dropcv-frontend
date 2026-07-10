@@ -48,7 +48,7 @@ window.dropCVApi = {
         ok: false,
         status: 0,
         data: null,
-        error: 'Network error — is the server running?',
+        error: 'Network error â€” is the server running?',
       };
     }
   },

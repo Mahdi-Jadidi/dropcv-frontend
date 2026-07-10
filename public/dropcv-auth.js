@@ -22,8 +22,51 @@
     return window.currentUser || null;
   }
 
+  function getPublicUrl(user) {
+    if (!user) {
+      return '';
+    }
+
+    return (
+      user.publicUrl ||
+      user.domains?.[0]?.full_url ||
+      (user.slug ? `${user.slug}.drop.cv` : '')
+    );
+  }
+
+  function getDropCVApi() {
+    if (window.dropCVApi && typeof window.dropCVApi.getCurrentUser === 'function') {
+      return window.dropCVApi;
+    }
+
+    return null;
+  }
+
+  async function waitForDropCVApi() {
+    var api = getDropCVApi();
+    if (api) {
+      return api;
+    }
+
+    for (var attempt = 0; attempt < 40; attempt += 1) {
+      await new Promise(function (resolve) {
+        setTimeout(resolve, 50);
+      });
+
+      api = getDropCVApi();
+      if (api) {
+        return api;
+      }
+    }
+
+    return null;
+  }
+
   async function handleSignOut() {
-    await window.dropCVApi.logout();
+    var api = await waitForDropCVApi();
+    if (api && typeof api.logout === 'function') {
+      await api.logout();
+    }
     window.currentUser = null;
     window.location.href = 'index.html';
   }
@@ -91,7 +134,13 @@
   }
 
   async function initAuth() {
-    var user = await window.dropCVApi.getCurrentUser();
+    var api = await waitForDropCVApi();
+    if (!api || typeof api.getCurrentUser !== 'function') {
+      window.currentUser = null;
+      return null;
+    }
+
+    var user = await api.getCurrentUser();
     window.currentUser = user;
 
     var navLogin = document.getElementById('navLogin');
@@ -135,14 +184,14 @@
     setTextIfPresent('welcomeName', user ? (user.firstName || user.userName || '') : '');
     setTextIfPresent(
       'userUrlChip',
-      user ? (user.domains?.[0]?.full_url || (user.slug ? `${user.slug}.drop.cv` : '')) : '',
+      getPublicUrl(user),
     );
     setTextIfPresent('planBadge', user ? `${user.plan} Plan` : '');
     setTextIfPresent('sidebarName', user ? (user.profile?.fullName || user.profile?.full_name || user.email || '') : '');
     setTextIfPresent('sidebarEmail', user ? user.email : '');
     setTextIfPresent('user-name', user ? (user.profile?.companyName || user.profile?.company_name || user.firstName || user.email || '') : '');
     setTextIfPresent('user-email', user ? user.email : '');
-    setTextIfPresent('user-url', user ? (user.domains?.[0]?.full_url || (user.slug ? `${user.slug}.drop.cv` : '')) : '');
+    setTextIfPresent('user-url', getPublicUrl(user));
     setTextIfPresent('plan-badge', user ? `${user.plan} Plan` : '');
     setTextIfPresent('company-name-display', user ? (user.profile?.companyName || user.profile?.company_name || user.email || '') : '');
 
@@ -178,6 +227,7 @@
   window.dropCV = {
     initAuth: initAuth,
     getUser: getUser,
+    getPublicUrl: getPublicUrl,
     getDashboardUrl: getDashboardUrl,
     getInitials: getInitials,
     handleSignOut: handleSignOut,

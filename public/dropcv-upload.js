@@ -661,6 +661,8 @@
     var currentUser = window.currentUser || (window.dropCV && typeof window.dropCV.getUser === 'function' ? window.dropCV.getUser() : null);
     if (currentUser) {
       userUrl =
+        (currentUser.publicUrl) ||
+        (window.dropCV && typeof window.dropCV.getPublicUrl === 'function' ? window.dropCV.getPublicUrl(currentUser) : '') ||
         (currentUser.domains && currentUser.domains[0] && currentUser.domains[0].full_url) ||
         (currentUser.slug ? currentUser.slug + '.drop.cv' : '') ||
         '';

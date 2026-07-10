@@ -253,7 +253,7 @@ function getUserUrl(user) {
   var domain = Array.isArray(user.domains)
     ? (user.domains.find(function (d) { return d && d.is_primary; }) || user.domains[0])
     : null;
-  return (domain && domain.full_url) || (user.slug ? user.slug + '.drop.cv' : '');
+  return user.publicUrl || (domain && (domain.public_url || domain.full_url)) || (user.slug ? user.slug + '.drop.cv' : '');
 }
 
 function getSnapshot() {

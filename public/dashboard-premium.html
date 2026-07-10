@@ -1814,6 +1814,7 @@
         if (window.currentUser) {
           var u = window.currentUser;
           userURL =
+            u.publicUrl ||
             (u.domains && u.domains[0] && u.domains[0].full_url) ||
             (u.slug ? u.slug + '.drop.cv' : '') ||
             userURL;

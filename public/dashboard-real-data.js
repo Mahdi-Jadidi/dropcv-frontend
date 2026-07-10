@@ -205,7 +205,7 @@
 
   function getUserUrl(user) {
     var domain = getPrimaryDomain(user);
-    return (domain && domain.full_url) || (user && user.slug ? user.slug + '.drop.cv' : '');
+    return (user && user.publicUrl) || (domain && (domain.public_url || domain.full_url)) || (user && user.slug ? user.slug + '.drop.cv' : '');
   }
 
   async function getCurrentUserFromSharedAuth() {
@@ -228,7 +228,7 @@
     }
 
     domainList.innerHTML = domains.map(function (d) {
-      var fullUrl = d.full_url || (d.slug ? d.slug + '.drop.cv' : '');
+      var fullUrl = d.public_url || d.full_url || (d.slug ? d.slug + '.drop.cv' : '');
       var safeUrl = escapeHtml(fullUrl);
       return [
         '<div class="domain-row">',

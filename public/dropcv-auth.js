@@ -5,6 +5,9 @@
 (function () {
   'use strict';
 
+  var RECENT_AUTH_STORAGE_KEY = 'dropcv_recent_auth';
+  var RECENT_AUTH_MAX_AGE_MS = 15000;
+
   function getDashboardUrl(plan) {
     var map = {
       Standard: 'dashboard-standard.html',
@@ -20,6 +23,47 @@
 
   function getUser() {
     return window.currentUser || null;
+  }
+
+  function markRecentAuth(reason) {
+    try {
+      window.sessionStorage.setItem(
+        RECENT_AUTH_STORAGE_KEY,
+        JSON.stringify({
+          at: Date.now(),
+          reason: reason || 'auth',
+        })
+      );
+    } catch (error) {}
+  }
+
+  function getRecentAuth() {
+    try {
+      var raw = window.sessionStorage.getItem(RECENT_AUTH_STORAGE_KEY);
+      if (!raw) {
+        return null;
+      }
+
+      var parsed = JSON.parse(raw);
+      if (!parsed || typeof parsed.at !== 'number') {
+        return null;
+      }
+
+      if (Date.now() - parsed.at > RECENT_AUTH_MAX_AGE_MS) {
+        clearRecentAuth();
+        return null;
+      }
+
+      return parsed;
+    } catch (error) {
+      return null;
+    }
+  }
+
+  function clearRecentAuth() {
+    try {
+      window.sessionStorage.removeItem(RECENT_AUTH_STORAGE_KEY);
+    } catch (error) {}
   }
 
   function getPublicUrl(user) {
@@ -67,6 +111,7 @@
     if (api && typeof api.logout === 'function') {
       await api.logout();
     }
+    clearRecentAuth();
     window.currentUser = null;
     window.location.href = 'index.html';
   }
@@ -142,6 +187,9 @@
 
     var user = await api.getCurrentUser();
     window.currentUser = user;
+    if (user) {
+      clearRecentAuth();
+    }
 
     var navLogin = document.getElementById('navLogin');
     var navSignup = document.getElementById('navSignup');
@@ -230,6 +278,9 @@
     getPublicUrl: getPublicUrl,
     getDashboardUrl: getDashboardUrl,
     getInitials: getInitials,
+    getRecentAuth: getRecentAuth,
+    markRecentAuth: markRecentAuth,
+    clearRecentAuth: clearRecentAuth,
     handleSignOut: handleSignOut,
     signOut: handleSignOut,
   };

@@ -4,6 +4,7 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import {
   buildProductionSiteConfig,
+  getSiteConfigLoaderMarker,
   LIVE_BACKEND_ORIGIN,
   LIVE_FRONTEND_API_BASE,
   LIVE_FRONTEND_ORIGIN,
@@ -15,6 +16,7 @@ import {
 const scriptDir = dirname(fileURLToPath(import.meta.url));
 const repoRoot = join(scriptDir, '..');
 const expectedConfig = normalizeText(buildProductionSiteConfig());
+const expectedLoaderMarker = getSiteConfigLoaderMarker();
 const timeoutMs = 20_000;
 
 function normalizeText(value) {
@@ -63,10 +65,9 @@ function assertCors(response, label) {
 async function verifyRepoConfig(relativePath) {
   const filePath = join(repoRoot, relativePath);
   const actual = normalizeText(await readFile(filePath, 'utf8'));
-  assert.equal(
-    actual,
-    expectedConfig,
-    `${relativePath} is out of sync with the live frontend API base`,
+  assert.ok(
+    actual.includes(expectedLoaderMarker),
+    `${relativePath} should load site-config.production.js outside localhost`,
   );
 }
 
@@ -103,12 +104,21 @@ async function main() {
   assert.equal(login.response.status, 200, 'GET /login.html should load');
   assert.ok(login.text.includes('<form'), 'Login page should render a form');
 
-  const siteConfig = await request(resolveLiveUrl(LIVE_FRONTEND_ORIGIN, '/site-config.production.js'), {
+  const siteConfig = await request(resolveLiveUrl(LIVE_FRONTEND_ORIGIN, '/site-config.js'), {
     headers: { Accept: 'application/javascript' },
   });
-  assert.equal(siteConfig.response.status, 200, 'site-config.production.js should load');
+  assert.equal(siteConfig.response.status, 200, 'site-config.js should load');
+  assert.ok(
+    siteConfig.text.includes(expectedLoaderMarker),
+    'Live site-config.js should load site-config.production.js outside localhost',
+  );
+
+  const productionSiteConfig = await request(resolveLiveUrl(LIVE_FRONTEND_ORIGIN, '/site-config.production.js'), {
+    headers: { Accept: 'application/javascript' },
+  });
+  assert.equal(productionSiteConfig.response.status, 200, 'site-config.production.js should load');
   assert.equal(
-    normalizeText(siteConfig.text),
+    normalizeText(productionSiteConfig.text),
     expectedConfig,
     'Live site-config.production.js should match the shared frontend proxy base',
   );

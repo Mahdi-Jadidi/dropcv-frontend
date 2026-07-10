@@ -1384,7 +1384,7 @@
       if (content) content.classList.add('auth-pending');
 
       // Guard: redirect to login if not logged in; redirect to correct dashboard if wrong plan
-      const user = await waitForCurrentUser();
+      const user = await waitForCurrentUser() || await waitForFreshSessionUser();
       if (!user) {
         window.location.href = 'login.html';
         return;
@@ -1422,6 +1422,26 @@
       return window.dropCV && typeof window.dropCV.initAuth === 'function'
         ? await window.dropCV.initAuth()
         : null;
+    }
+
+    async function waitForFreshSessionUser() {
+      if (!(window.dropCV && typeof window.dropCV.getRecentAuth === 'function' && window.dropCV.getRecentAuth())) {
+        return null;
+      }
+
+      for (let attempt = 0; attempt < 20; attempt += 1) {
+        await new Promise(resolve => setTimeout(resolve, 250));
+
+        const user = window.dropCV && typeof window.dropCV.initAuth === 'function'
+          ? await window.dropCV.initAuth()
+          : null;
+
+        if (user) {
+          return user;
+        }
+      }
+
+      return null;
     }
 
     // Personalization: populate sidebar (name/email/avatar/plan badge), welcome heading, URL chip

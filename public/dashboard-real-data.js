@@ -218,6 +218,25 @@
     return null;
   }
 
+  async function waitForRecentAuthUser() {
+    if (!(window.dropCV && typeof window.dropCV.getRecentAuth === 'function' && window.dropCV.getRecentAuth())) {
+      return null;
+    }
+
+    for (var attempt = 0; attempt < 20; attempt += 1) {
+      await new Promise(function (resolve) {
+        setTimeout(resolve, 250);
+      });
+
+      var user = await getCurrentUserFromSharedAuth();
+      if (user) {
+        return user;
+      }
+    }
+
+    return null;
+  }
+
   function renderDomainRows(domains) {
     var domainList = document.getElementById('domainList');
     if (!domainList) return;
@@ -393,6 +412,9 @@
 
   async function initProfessionalDashboard() {
     var user = await getCurrentUserFromSharedAuth();
+    if (!user) {
+      user = await waitForRecentAuthUser();
+    }
     if (!user) {
       window.location.href = 'login.html';
       return;

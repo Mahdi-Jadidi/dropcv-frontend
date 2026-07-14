@@ -230,7 +230,7 @@ try {
     page.locator('#registerBtn').click(),
   ]);
   assert.ok(page.url().includes('/dashboard.html'), 'Signup should redirect to the shared dashboard');
-  await page.waitForSelector('.sign-out-link');
+  await page.waitForSelector('#logout');
   await waitForAuthenticatedDashboard(email, 'Signup dashboard');
   await page.waitForTimeout(8000);
   assert.ok(
@@ -276,7 +276,7 @@ try {
 
   await Promise.all([
     page.waitForNavigation({ waitUntil: 'domcontentloaded', timeout: 30000 }).catch(() => null),
-    page.locator('.sign-out-link').click(),
+    page.locator('#logout').click(),
   ]);
 
   await page.goto(resolveLiveUrl(LIVE_FRONTEND_ORIGIN, '/login.html'), {

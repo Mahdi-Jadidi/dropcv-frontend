@@ -5,7 +5,7 @@ export const dynamic = "force-static";
 export const revalidate = false;
 
 type RouteContext = {
-  params: Promise<{ htmlPath?: string[] }> | { htmlPath?: string[] };
+  params: Promise<{ htmlPath?: string[] }>;
 };
 
 function collectHtmlParams(directory: string, baseDirectory = directory): Array<{ htmlPath: string[] }> {
@@ -39,7 +39,7 @@ export function generateStaticParams() {
 }
 
 export async function GET(_request: Request, context: RouteContext) {
-  const { htmlPath = [] } = await Promise.resolve(context.params);
+  const { htmlPath = [] } = await context.params;
   const requestedPath = htmlPath.join("/");
 
   if (!requestedPath) {

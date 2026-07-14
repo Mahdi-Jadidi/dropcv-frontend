@@ -37,6 +37,11 @@
     ".next/dev/types/**/*.ts"
   ],
   "exclude": [
-    "node_modules"
+    "node_modules",
+    "drop.cv-frontend",
+    "dropcv-backend",
+    ".codex-temp",
+    ".tmp-cdp",
+    ".vercel-data"
   ]
 }

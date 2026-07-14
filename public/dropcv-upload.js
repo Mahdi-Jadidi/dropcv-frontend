@@ -676,16 +676,21 @@
         '';
     }
 
+    var serverDep = currentUser && currentUser.latestDeployment ? currentUser.latestDeployment : null;
+    var hasDeployment = Boolean((dep && dep.deployed) || serverDep);
+    var deploymentStatus = (serverDep && serverDep.status) || ((dep && dep.deployed) ? 'live' : '');
+    var isLive = deploymentStatus === 'live' || Boolean(dep && dep.deployed);
+
     var card = document.createElement('div');
-    if (dep && dep.deployed) {
-      card.className = 'dropcv-status-card live';
+    if (hasDeployment) {
+      card.className = 'dropcv-status-card' + (isLive ? ' live' : '');
       card.innerHTML =
         '<div class="dropcv-status-row">' +
           '<span class="dropcv-status-dot"></span>' +
-          '<span class="dropcv-status-title">Live</span>' +
+          '<span class="dropcv-status-title">' + (isLive ? 'Live' : 'Draft') + '</span>' +
         '</div>' +
-        '<div class="dropcv-status-url">' + (dep.url || userUrl) + '</div>' +
-        '<div class="dropcv-status-updated">Last updated: ' + (dep.updatedAt || 'just now') + '</div>' +
+        '<div class="dropcv-status-url">' + ((dep && dep.url) || userUrl || 'Preview ready') + '</div>' +
+        '<div class="dropcv-status-updated">Deployment status: ' + (deploymentStatus || 'ready') + '</div>' +
         '<div class="dropcv-status-actions">' +
           '<button class="dropcv-btn-ghost dropcv-copy-link" type="button">Copy link</button>' +
           '<a class="dropcv-btn-teal dropcv-visit" href="' + (opts.visitHref || '#') + '" target="_blank" rel="noopener">Visit site →</a>' +

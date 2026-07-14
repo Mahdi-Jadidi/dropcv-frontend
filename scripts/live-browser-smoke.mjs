@@ -41,8 +41,29 @@ const context = await browser.newContext({
   viewport: { width: 1440, height: 1200 },
 });
 const page = await context.newPage();
+await page.addInitScript(() => {
+  let apiValue;
+  window.__dropcvApiAssignments = [];
+  Object.defineProperty(window, 'dropCVApi', {
+    configurable: true,
+    get() {
+      return apiValue;
+    },
+    set(nextValue) {
+      apiValue = nextValue;
+      window.__dropcvApiAssignments.push({
+        type: typeof nextValue,
+        keys: nextValue && typeof nextValue === 'object' ? Object.keys(nextValue) : [],
+      });
+    },
+  });
+});
 const pageErrors = [];
 const consoleErrors = [];
+const apiResponses = [];
+const assetResponses = [];
+const requestFailures = [];
+const navigations = [];
 const runId = Date.now().toString(36);
 const slug = `qa-smoke-${runId}`;
 const email = `${slug}@test.drop.cv`;
@@ -58,6 +79,65 @@ page.on('console', (message) => {
     consoleErrors.push(message.text());
   }
 });
+
+page.on('response', async (response) => {
+  if (response.url().includes('/proxy/api/')) {
+    let summary = null;
+    if (/\/api\/(?:auth|users)\/me$/.test(new URL(response.url()).pathname)) {
+      try {
+        const data = await response.json();
+        summary = data?.user ? { email: data.user.email, plan: data.user.plan } : data;
+      } catch {}
+    }
+    apiResponses.push({ url: response.url(), status: response.status(), summary });
+  }
+  if (/\/(?:dropcv-auth|dashboard-real-data|dropcv-api|site-config(?:\.production)?)\.js(?:\?|$)/.test(response.url())) {
+    assetResponses.push({ url: response.url(), status: response.status() });
+  }
+});
+
+page.on('requestfailed', (request) => {
+  requestFailures.push({ url: request.url(), error: request.failure()?.errorText || 'failed' });
+});
+
+page.on('framenavigated', (frame) => {
+  if (frame === page.mainFrame()) {
+    navigations.push(frame.url());
+  }
+});
+
+async function waitForAuthenticatedDashboard(expectedEmail, label) {
+  try {
+    await page.waitForFunction(
+      (emailAddress) => window.currentUser?.email === emailAddress,
+      expectedEmail,
+      { timeout: 20000 },
+    );
+  } catch (error) {
+    const pageState = await page.evaluate(() => ({
+      readyState: document.readyState,
+      currentUser: window.currentUser || null,
+      apiType: typeof window.dropCVApi,
+      apiMethods: window.dropCVApi ? Object.keys(window.dropCVApi) : [],
+      authType: typeof window.dropCV,
+      authMethods: window.dropCV ? Object.keys(window.dropCV) : [],
+      dashboardInitialized: Boolean(window.__dropcvSharedDashboardInitialized),
+      contentClass: document.getElementById('dashboardContent')?.className || '',
+      apiAssignments: window.__dropcvApiAssignments || [],
+    }));
+    console.error(`${label} auth trace: ${JSON.stringify({
+      url: page.url(),
+      pageState,
+      apiResponses: apiResponses.slice(-30),
+      assetResponses: assetResponses.slice(-30),
+      requestFailures: requestFailures.slice(-30),
+      navigations: navigations.slice(-30),
+      pageErrors,
+      consoleErrors,
+    })}`);
+    throw error;
+  }
+}
 
 async function expectNoRuntimeErrors(label) {
   assert.equal(pageErrors.length, 0, `${label} should not throw a page error: ${pageErrors.join(' | ')}`);
@@ -151,6 +231,48 @@ try {
   ]);
   assert.ok(page.url().includes('/dashboard-premium.html'), 'Signup should redirect to the premium dashboard');
   await page.waitForSelector('.sign-out-link');
+  await waitForAuthenticatedDashboard(email, 'Signup dashboard');
+  await page.waitForTimeout(8000);
+  assert.ok(
+    page.url().includes('/dashboard-premium.html'),
+    'Signup session should remain on the dashboard after authentication settles',
+  );
+
+  await page.locator('.nav-link[data-section="site"]').click();
+  const premiumTabs = await page.locator('#site-tabs-root .dropcv-tab:visible').allTextContents();
+  assert.deepEqual(
+    premiumTabs.map((label) => label.trim()),
+    ['Upload files', 'Tell us who you are'],
+    'Premium My Site should show only the combined upload and story sections',
+  );
+  assert.equal(
+    await page.locator('#site-tabs-root .dropcv-upload-zone:visible').count(),
+    1,
+    'Premium My Site should show one upload zone',
+  );
+  assert.equal(
+    await page.locator('#site-tabs-root input[type="file"]').first().getAttribute('accept'),
+    '.html,.htm,.css,.js,.zip,.pdf,.docx',
+    'Combined upload should accept site bundles and CV documents',
+  );
+  await page.getByRole('button', { name: 'Tell us who you are' }).click();
+  assert.ok(
+    await page.locator('#site-tabs-root textarea:visible').count() > 0,
+    'Premium story section should expose text fields',
+  );
+
+  await page.locator('.nav-link[data-section="domains"]').click();
+  await page.waitForSelector('#domainList .domain-item');
+  assert.ok(
+    !(await page.locator('#domainList').innerText()).includes('Loading'),
+    'Domains should render the account public URL instead of placeholders',
+  );
+
+  await page.locator('.nav-link[data-section="analytics"]').click();
+  await page.waitForSelector('#referrerTable tr');
+  await page.locator('.nav-link[data-section="settings"]').click();
+  assert.equal(await page.locator('#contact-email').inputValue(), email, 'Settings should show the authenticated email');
+  assert.equal(await page.locator('#full-name').isDisabled(), true, 'Unsupported profile editing should not look interactive');
 
   await Promise.all([
     page.waitForNavigation({ waitUntil: 'domcontentloaded', timeout: 30000 }).catch(() => null),
@@ -170,8 +292,14 @@ try {
     page.locator('#submit').click(),
   ]);
   assert.ok(page.url().includes('/dashboard-premium.html'), 'Login should redirect to the premium dashboard');
+  await waitForAuthenticatedDashboard(email, 'Login dashboard');
+  await page.waitForTimeout(8000);
+  assert.ok(
+    page.url().includes('/dashboard-premium.html'),
+    'Login session should remain on the dashboard after authentication settles',
+  );
 
-  console.log('Live browser smoke passed: homepage, signup redirect, login page, and dashboard login all loaded cleanly.');
+  console.log('Live browser smoke passed: homepage, signup, and login remained authenticated on the dashboard.');
 } finally {
   await context.close();
   await browser.close();

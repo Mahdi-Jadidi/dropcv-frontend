@@ -257,12 +257,15 @@
       var fullUrl = normalizePublicUrl(d.public_url || d.full_url || (d.slug ? ('drop-cv-backend.vercel.app/site/' + d.slug + '/') : ''));
       var safeUrl = escapeHtml(fullUrl);
       return [
-        '<div class="domain-row">',
-          '<span class="domain-url">' + safeUrl + '</span>',
-          d.is_primary ? '<span class="badge badge-green">Primary</span>' : '',
-          '<span class="live-dot-green"></span>',
-          '<button class="btn-sm" type="button" data-copy-domain="' + safeUrl + '">Copy</button>',
-          '<a href="' + safeUrl + '" target="_blank" rel="noreferrer" class="btn-sm">Visit &rarr;</a>',
+        '<div class="domain-item">',
+          '<div class="domain-header"><div class="domain-info">',
+            '<div class="domain-name">' + safeUrl + (d.is_primary ? ' <span class="domain-badge">Primary</span>' : '') + '</div>',
+            '<div class="domain-status"><span class="status-dot"></span> Active</div>',
+          '</div></div>',
+          '<div class="domain-actions">',
+            '<button class="btn btn-outline" type="button" data-copy-domain="' + safeUrl + '">Copy</button>',
+            '<a href="' + safeUrl + '" target="_blank" rel="noreferrer" class="btn btn-outline">Visit →</a>',
+          '</div>',
         '</div>',
       ].join('');
     }).join('');
@@ -334,9 +337,11 @@
 
     var referrerTable = document.getElementById('referrerTable');
     if (referrerTable && Array.isArray(data.topReferrers)) {
+      var referrerTotal = data.topReferrers.reduce(function (sum, row) { return sum + Number(row.count || 0); }, 0);
       referrerTable.innerHTML = data.topReferrers.map(function (row) {
-        return '<tr><td>' + escapeHtml(row.referrer || 'Direct') + '</td><td>' + escapeHtml(row.count) + '</td></tr>';
-      }).join('');
+        var percentage = referrerTotal ? Math.round((Number(row.count || 0) / referrerTotal) * 100) + '%' : '0%';
+        return '<tr><td>' + escapeHtml(row.referrer || 'Direct') + '</td><td>' + escapeHtml(row.count) + '</td><td>' + percentage + '</td></tr>';
+      }).join('') || '<tr><td colspan="3">No visits recorded yet.</td></tr>';
     }
 
     var countriesList = document.getElementById('countriesList');
@@ -382,7 +387,7 @@
   }
 
   function loadDeploymentStatus(user) {
-    var statusHost = document.querySelector('[data-dropcv-status]');
+    var statusHosts = document.querySelectorAll('[data-dropcv-status]');
     var currentStatusBlock = document.getElementById('site-current-status');
     var url = getUserUrl(user);
 
@@ -396,13 +401,15 @@
       setHref('[data-user-url]', url);
     }
 
-    if (statusHost && window.dropcvUpload) {
-      window.dropcvUpload.renderStatusCard(statusHost, {
-        visitHref: url,
-        onGoToSite: function () {
-          var siteLink = document.querySelector('.nav-link[data-section="site"]');
-          if (siteLink) siteLink.click();
-        }
+    if (statusHosts.length && window.dropcvUpload) {
+      statusHosts.forEach(function (statusHost) {
+        window.dropcvUpload.renderStatusCard(statusHost, {
+          visitHref: url,
+          onGoToSite: function () {
+            var siteLink = document.querySelector('.nav-link[data-section="site"]');
+            if (siteLink) siteLink.click();
+          }
+        });
       });
     }
 
@@ -417,7 +424,45 @@
     }
   }
 
+  function populateSettings(user) {
+    var profile = (user && user.profile) || {};
+    var values = {
+      'full-name': profile.full_name || user.fullName || '',
+      'job-title': profile.job_title || profile.headline || '',
+      'city': profile.city || '',
+      'bio': profile.bio || '',
+      'contact-email': user.email || '',
+      'linkedin-url': profile.linkedin_url || '',
+      'phone': profile.phone || ''
+    };
+
+    Object.keys(values).forEach(function (id) {
+      var field = document.getElementById(id);
+      if (field) field.value = values[id];
+    });
+
+    document.querySelectorAll('#settings input, #settings textarea').forEach(function (field) {
+      field.disabled = true;
+    });
+
+    var settingsSection = document.getElementById('settings');
+    if (settingsSection && !document.getElementById('settings-readonly-note')) {
+      var note = document.createElement('div');
+      note.id = 'settings-readonly-note';
+      note.className = 'card';
+      note.style.marginBottom = '20px';
+      note.textContent = 'These details are loaded from your account. Profile editing is not available in this dashboard yet.';
+      var subheading = settingsSection.querySelector('.subheading');
+      if (subheading) subheading.insertAdjacentElement('afterend', note);
+    }
+  }
+
   async function initProfessionalDashboard() {
+    if (window.__dropcvSharedDashboardInitialized) {
+      return;
+    }
+
+    window.__dropcvSharedDashboardInitialized = true;
     var user = await getCurrentUserFromSharedAuth();
     if (!user) {
       user = await waitForRecentAuthUser();
@@ -442,7 +487,14 @@
     loadDeploymentStatus(user);
 
     var domains = Array.isArray(user.domains) ? user.domains : [];
+    if (!domains.length && (user.publicUrl || user.slug)) {
+      domains = [{
+        full_url: user.publicUrl || ('https://drop-cv-backend.vercel.app/site/' + user.slug + '/'),
+        is_primary: true
+      }];
+    }
     renderDomainRows(domains);
+    populateSettings(user);
 
     if (typeof loadAnalytics === 'function') {
       await loadAnalytics();
@@ -455,6 +507,11 @@
     }
 
     setDashboardReady();
+
+    if (!window.__dropcvUploadInitialized && typeof window.initDropcvUpload === 'function') {
+      window.__dropcvUploadInitialized = true;
+      window.initDropcvUpload();
+    }
 
     var siteLink = document.querySelector('.nav-link[data-section="site"]');
     if (siteLink) {

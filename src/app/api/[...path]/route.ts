@@ -104,6 +104,11 @@ async function proxy(request: Request) {
   const bodyBuffer = Buffer.from(await upstreamResponse.arrayBuffer());
   const responseHeaders = new Headers();
   copyResponseHeaders(upstreamResponse.headers, responseHeaders);
+  responseHeaders.set("Cache-Control", "private, no-store, no-cache, must-revalidate");
+  responseHeaders.set("Pragma", "no-cache");
+  responseHeaders.set("Expires", "0");
+  responseHeaders.append("Vary", "Cookie");
+  responseHeaders.append("Vary", "Authorization");
 
   return new Response(bodyBuffer, {
     status: upstreamResponse.status,

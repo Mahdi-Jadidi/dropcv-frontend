@@ -31,5 +31,5 @@ export function buildProductionSiteConfig() {
 }
 
 export function getSiteConfigLoaderMarker() {
-  return "document.write('<script src=\"site-config.production.js\"><\\\\/script>');";
+  return "document.write('<script src=\"site-config.production.js\"></script>');";
 }

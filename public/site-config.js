@@ -3,7 +3,7 @@
   var isLocalhost = host === 'localhost' || host === '127.0.0.1' || host === '::1';
 
   if (!isLocalhost && typeof document !== 'undefined') {
-    document.write('<script src="site-config.production.js"><\\/script>');
+    document.write('<script src="site-config.production.js"></script>');
   }
 
   window.dropCVConfig = window.dropCVConfig || {};

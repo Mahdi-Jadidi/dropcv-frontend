@@ -1,6 +1,7 @@
 <!doctype html>
 <html lang="fa" dir="rtl">
 <head>
+  <link rel="icon" href="logo.svg" type="image/svg+xml">
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="robots" content="noindex">
@@ -113,9 +114,9 @@
     </div>
   </footer>
 
-  <script src="site-config.js"></script>
-  <script src="i18n.js"></script>
-  <script src="api/dropcv-api.js"></script>
+  <script src="site-config.js?v=20260713h"></script>
+  <script src="i18n.js?v=20260710b"></script>
+  <script src="dropcv-api.js?v=20260713g"></script>
   <script>document.getElementById('footerYear').textContent = new Date().getFullYear();</script>
   <script type="importmap">
     {
@@ -131,7 +132,7 @@
       }
     }
   </script>
-  <script type="module" src="auth-motion.mjs"></script>
+  <script type="module" src="auth-motion.mjs?v=20260710b"></script>
   <script>
     function getDashboardUrl(plan) {
       if (window.dropCVApi && typeof window.dropCVApi.getDashboardUrl === 'function') {

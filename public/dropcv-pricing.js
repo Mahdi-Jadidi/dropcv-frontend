@@ -3,6 +3,7 @@
 
   var state = {
     plans: null,
+    capabilities: null,
     loading: false,
     loadPromise: null,
   };
@@ -46,6 +47,7 @@
       .then(function (response) {
         if (response && response.ok && response.data && response.data.plans) {
           state.plans = response.data.plans;
+          state.capabilities = response.data.capabilities || null;
           applyPlanPrices();
         }
         return state.plans;
@@ -74,6 +76,7 @@
     refresh: applyPlanPrices,
     getPlan: getPlan,
     getAmount: getAmount,
+    getCapabilities: function () { return state.capabilities; },
     formatAmount: formatAmount,
   };
 

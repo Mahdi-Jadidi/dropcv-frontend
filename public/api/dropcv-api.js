@@ -15,12 +15,15 @@ const API_BASE = (() => {
   return '';
 })();
 
+let currentUserRequest = null;
+
 window.dropCVApi = {
   // Core request method
   async request(method, path, body = null, isFormData = false) {
     const options = {
       method,
       credentials: 'include',
+      cache: 'no-store',
       headers: {},
     };
 
@@ -56,6 +59,9 @@ window.dropCVApi = {
   // Auth
   async getMe() {
     return this.request('GET', '/api/users/me');
+  },
+  async getAuthSession() {
+    return this.request('GET', '/api/auth/me');
   },
   async login(email, password) {
     return this.request('POST', '/api/auth/login', { email, password });
@@ -136,6 +142,21 @@ window.dropCVApi = {
   async requestPayment(plan) {
     return this.request('POST', '/api/payments/request', { plan });
   },
+  async getPaymentHistory() {
+    return this.request('GET', '/api/payments/history');
+  },
+  async updateSettings(settings) {
+    return this.request('PATCH', '/api/users/settings', settings);
+  },
+  async changePassword(currentPassword, newPassword) {
+    return this.request('POST', '/api/users/password', { currentPassword, newPassword });
+  },
+  async requestEmailChange(newEmail) {
+    return this.request('POST', '/api/users/email-change', { newEmail });
+  },
+  async deleteAccount(password) {
+    return this.request('DELETE', '/api/users/account', { password, confirmation: 'DELETE' });
+  },
   async unpublishSite(deploymentId) {
     return this.request('POST', `/api/sites/${deploymentId}/unpublish`);
   },
@@ -178,10 +199,26 @@ window.dropCVApi = {
 
   // Auth state helper
   async getCurrentUser() {
-    const res = await this.getMe();
-    if (res.ok && res.data?.user) {
-      return res.data.user;
+    if (currentUserRequest) {
+      return currentUserRequest;
     }
-    return null;
+
+    currentUserRequest = (async () => {
+      const session = await this.getAuthSession();
+      if (!session.ok || !session.data?.user) {
+        return null;
+      }
+
+      const profile = await this.getMe();
+      return profile.ok && profile.data?.user
+        ? profile.data.user
+        : session.data.user;
+    })();
+
+    try {
+      return await currentUserRequest;
+    } finally {
+      currentUserRequest = null;
+    }
   },
 };

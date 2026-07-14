@@ -9,12 +9,7 @@
   var RECENT_AUTH_MAX_AGE_MS = 15000;
 
   function getDashboardUrl(plan) {
-    var map = {
-      Standard: 'dashboard-standard.html',
-      Premium: 'dashboard-premium.html',
-    };
-
-    return map[plan] || 'dashboard-standard.html';
+    return 'dashboard.html';
   }
 
   function getInitials(first, last) {

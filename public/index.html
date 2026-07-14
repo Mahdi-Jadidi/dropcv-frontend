@@ -3,7 +3,8 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <meta name="description" content="رزومه خود را به یک وب‌سایت حرفه‌ای تبدیل کنید. ۳ روز آزمایشی رایگان، ویرایش آسان و انتشار با دامنه شخصی drop.cv.">
+  <meta name="description" content="رزومه خود را به یک وب‌سایت حرفه‌ای و لینک قابل اشتراک تبدیل کنید. سه روز آزمایشی و پرداخت هنگام انتشار.">
+  <link rel="icon" href="logo.svg" type="image/svg+xml">
   <title>drop.cv — رزومه شما، یک وب‌سایت حرفه‌ای</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=Vazirmatn:wght@400;600;700;800&display=swap" rel="stylesheet">
@@ -312,6 +313,13 @@
       border-top: 1px solid var(--line);
     }
 
+    footer a {
+      min-height: 44px;
+      display: inline-flex;
+      align-items: center;
+      padding-inline: 8px;
+    }
+
     html[data-lang="en"] .hero h1,
     html[data-lang="en"] .section h2,
     html[data-lang="en"] .final h2 {
@@ -421,7 +429,7 @@
             <span class="dot"></span>
             <span class="dot"></span>
             <span class="dot"></span>
-            <span class="url ltr">sara-ahmadi.drop.cv</span>
+            <span class="url ltr">drop-cv-backend.vercel.app/site/sara-ahmadi/</span>
           </div>
           <div class="profile">
             <div class="avatar">SA</div>
@@ -461,7 +469,7 @@
           <article class="card step">
             <div class="num" data-fa="۱" data-en="1">۱</div>
             <h3 data-fa="نامتان را رزرو کنید" data-en="Reserve your name">نامتان را رزرو کنید</h3>
-            <p class="muted" data-fa="آدرس شخصی name.drop.cv را انتخاب و حساب خود را بسازید." data-en="Choose your name.drop.cv address and create an account.">آدرس شخصی name.drop.cv را انتخاب و حساب خود را بسازید.</p>
+            <p class="muted" data-fa="نام لینک عمومی خود را انتخاب و حساب‌تان را بسازید." data-en="Choose your public-link name and create an account.">نام لینک عمومی خود را انتخاب و حساب‌تان را بسازید.</p>
           </article>
           <article class="card step">
             <div class="num" data-fa="۲" data-en="2">۲</div>
@@ -470,8 +478,8 @@
           </article>
           <article class="card step">
             <div class="num" data-fa="۳" data-en="3">۳</div>
-            <h3 data-fa="پرداخت و انتشار" data-en="Pay and publish">پرداخت و انتشار</h3>
-            <p class="muted" data-fa="پس از تایید، با زرین‌پال پرداخت و وب‌سایت را منتشر کنید." data-en="Approve your preview, pay securely with ZarinPal, and publish.">پس از تایید، با زرین‌پال پرداخت و وب‌سایت را منتشر کنید.</p>
+            <h3 data-fa="آماده انتشار شوید" data-en="Get ready to publish">آماده انتشار شوید</h3>
+            <p class="muted" data-fa="پیش‌نمایش را تأیید و پلن خود را انتخاب کنید. پرداخت و انتشار پس از فعال‌شدن درگاه در دسترس خواهد بود." data-en="Approve your preview and choose a plan. Payment and publishing become available when the gateway is enabled.">پیش‌نمایش را تأیید و پلن خود را انتخاب کنید. پرداخت و انتشار پس از فعال‌شدن درگاه در دسترس خواهد بود.</p>
           </article>
         </div>
       </div>
@@ -510,7 +518,7 @@
             <p data-fa="اگر می‌خواهید تجربه‌تان را به یک داستان روشن تبدیل کنید." data-en="Best if you want help turning experience into a story.">اگر می‌خواهید تجربه‌تان را به یک داستان روشن تبدیل کنید.</p>
             <ul>
               <li data-fa="همه امکانات استاندارد" data-en="Everything in Standard">همه امکانات استاندارد</li>
-              <li data-fa="مصاحبه کوتاه و نگارش با هوش مصنوعی" data-en="Guided interview and AI writing">مصاحبه کوتاه و نگارش با هوش مصنوعی</li>
+              <li data-fa="پرسش‌نامه هدایت‌شده و نگارش حرفه‌ای" data-en="Guided brief and professional writing">پرسش‌نامه هدایت‌شده و نگارش حرفه‌ای</li>
               <li data-fa="آمار کامل بازدید" data-en="Full visitor analytics">آمار کامل بازدید</li>
             </ul>
             <a class="btn btn-primary" href="signup.html?plan=Premium" data-fa="شروع با پریمیوم" data-en="Start Premium">شروع با پریمیوم</a>
@@ -564,13 +572,14 @@
         <a href="cookies.html" data-fa="کوکی‌ها" data-en="Cookies">کوکی‌ها</a>
         <a href="privacy.html" data-fa="حریم خصوصی" data-en="Privacy">حریم خصوصی</a>
         <a href="terms.html" data-fa="قوانین" data-en="Terms">قوانین</a>
+        <a href="terms.html#acceptable-use" data-fa="استفاده مجاز" data-en="Acceptable use">استفاده مجاز</a>
       </div>
     </div>
   </footer>
 
-  <script src="site-config.js"></script>
+  <script src="site-config.js?v=20260713h"></script>
   <script src="i18n.js"></script>
-  <script src="api/dropcv-api.js"></script>
+  <script src="dropcv-api.js?v=20260713g"></script>
   <script src="dropcv-pricing.js"></script>
   <script>document.getElementById('footerYear').textContent = new Date().getFullYear();</script>
 </body>

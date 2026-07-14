@@ -269,7 +269,7 @@ try {
     slug,
     email,
     password,
-    plan: 'Premium',
+    plan: 'Standard',
     userType: 'professional',
     professionalProfile: {
       fullName,
@@ -281,7 +281,7 @@ try {
   assert.equal(registration.status, 201, 'Signup should return 201');
   assert.equal(registration.data?.user?.email, email, 'Signup should store the email in the DB');
   assert.equal(registration.data?.user?.slug, slug, 'Signup should store the slug in the DB');
-  assert.equal(registration.data?.user?.plan, 'Premium', 'Signup should keep the requested plan');
+  assert.ok(['Standard', 'Annual'].includes(registration.data?.user?.plan), 'Signup should use the single annual entitlement');
 
   const cookieHeader = await getAuthCookieHeader(context);
   const meAfterSignup = await fetchAuthenticatedUser(cookieHeader);

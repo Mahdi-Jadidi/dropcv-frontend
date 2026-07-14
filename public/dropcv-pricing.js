@@ -63,7 +63,8 @@
   }
 
   function getPlan(name) {
-    return state.plans ? state.plans[name] || null : null;
+    if (!state.plans) return null;
+    return state.plans[name] || state.plans.Annual || state.plans.Standard || null;
   }
 
   function getAmount(name) {

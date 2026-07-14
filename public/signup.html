@@ -48,10 +48,12 @@
       }
       .plans {
         display: grid;
-        grid-template-columns: 1fr 1fr;
+        grid-template-columns: minmax(0, 560px);
+        justify-content: center;
         gap: 16px;
         margin: 24px 0;
       }
+      .plans .plan[data-plan="Premium"] { display: none; }
       .plan {
         padding: 22px;
         border: 2px solid var(--line);
@@ -390,13 +392,13 @@
           aria-live="polite"
         ></div>
         <section class="step active" data-step="1">
-          <h2 data-fa="مسیرتان را انتخاب کنید" data-en="Choose your path">
-            مسیرتان را انتخاب کنید
+          <h2 data-fa="drop.cv سالانه" data-en="drop.cv Annual">
+            drop.cv سالانه
           </h2>
           <p
             class="muted"
-            data-fa="می‌توانید قبل از پرداخت، نتیجه را کامل ببینید و ویرایش کنید. هر پلن با {{trialDays}} روز آزمایش رایگان شروع می‌شود."
-            data-en="You can see and edit the complete result before paying. Every plan starts with a {{trialDays}}-day free trial."
+            data-fa="فایل‌های سایت یا رزومه خود را بارگذاری کنید. قبل از پرداخت، نتیجه را کامل ببینید و ویرایش کنید."
+            data-en="Upload your website files or CV. See and edit the complete result before paying."
           >
             می‌توانید قبل از پرداخت، نتیجه را کامل ببینید و ویرایش کنید. هر پلن
             با 3 روز آزمایش رایگان شروع می‌شود.
@@ -408,7 +410,7 @@
               data-plan="Standard"
               aria-pressed="true"
             >
-              <strong data-fa="استاندارد" data-en="Standard">استاندارد</strong>
+              <strong data-fa="یک سال دسترسی" data-en="One year of access">یک سال دسترسی</strong>
               <div
                 class="amount"
                 data-dropcv-plan-amount="Standard"
@@ -817,10 +819,7 @@
     <script>
       (async function () {
         var current = 1,
-          plan =
-            new URLSearchParams(location.search).get("plan") === "Premium"
-              ? "Premium"
-              : "Standard",
+          plan = "Standard",
           deploymentId = "",
           preview = {},
           currentUser = null;
@@ -976,7 +975,7 @@
           var me = await dropCVApi.getMe();
           if (!me.ok || !me.data || !me.data.user) return;
           currentUser = me.data.user;
-          plan = currentUser.plan || plan;
+          plan = "Standard";
           document.querySelectorAll("[data-plan]").forEach(function (b) {
             b.setAttribute("aria-pressed", String(b.dataset.plan === plan));
             b.disabled = true;

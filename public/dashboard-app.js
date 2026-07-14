@@ -74,8 +74,8 @@
     if (!state.user) return;
     var name = userName();
     document.getElementById("account-name").textContent = name;
-    document.getElementById("account-plan").textContent = state.user.plan;
-    document.getElementById("plan-pill").textContent = state.user.plan;
+    document.getElementById("account-plan").textContent = text("سالانه", "Annual");
+    document.getElementById("plan-pill").textContent = text("سالانه", "Annual");
     document.getElementById("avatar").textContent = (name || "?")
       .trim()
       .slice(0, 1)
@@ -92,10 +92,8 @@
             "Your three-day trial has " + (sub.daysLeft || 0) + " day(s) left.",
           )
         : text("وضعیت اشتراک: ", "Subscription: ") + (sub.status || "—");
-    document.getElementById("premium-upgrade").hidden =
-      state.user.plan === "Premium";
-    document.getElementById("premium-brief").hidden =
-      state.user.plan !== "Premium";
+    document.getElementById("premium-upgrade").hidden = true;
+    document.getElementById("premium-brief").hidden = true;
     var form = document.getElementById("settings-form");
     form.fullName.value = name || "";
     form.email.value = state.user.email || "";
@@ -487,7 +485,6 @@
       return;
     }
     setupUpload();
-    setupBrief();
     setupSettings();
     setupAccountActions();
     setLanguage(state.user.language || state.language);

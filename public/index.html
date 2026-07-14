@@ -209,8 +209,12 @@
     }
 
     .pricing {
-      grid-template-columns: repeat(2, minmax(0, 420px));
+      grid-template-columns: minmax(0, 620px);
       justify-content: center;
+    }
+
+    .pricing .plan.featured {
+      display: none;
     }
 
     .plan {
@@ -490,22 +494,22 @@
         <div style="text-align:center">
           <div class="eyebrow" data-fa="تعرفه سالانه" data-en="Annual pricing">تعرفه سالانه</div>
           <h2 data-fa="یک رزومه بهتر، یک قیمت روشن" data-en="A better resume, with clear pricing">یک رزومه بهتر، یک قیمت روشن</h2>
-          <p class="section-note" data-fa="همه پلن‌ها با {{trialDays}} روز آزمایشی رایگان شروع می‌شوند." data-en="All plans start with a {{trialDays}}-day free trial.">همه پلن‌ها با 3 روز آزمایشی رایگان شروع می‌شوند.</p>
+          <p class="section-note" data-fa="یک محصول، یک قیمت سالانه و {{trialDays}} روز آزمایش رایگان." data-en="One product, one annual price, and a {{trialDays}}-day free trial.">یک محصول، یک قیمت سالانه و 3 روز آزمایش رایگان.</p>
         </div>
         <div class="pricing">
           <article class="card plan">
-            <h3 data-fa="استاندارد" data-en="Standard">استاندارد</h3>
+            <h3 data-fa="drop.cv سالانه" data-en="drop.cv Annual">drop.cv سالانه</h3>
             <div class="price">
               <span class="ltr" data-dropcv-plan-amount="Standard" data-fa="در حال دریافت قیمت" data-en="Loading price">در حال دریافت قیمت</span>
               <small data-fa="تومان / سال" data-en="toman / year">تومان / سال</small>
             </div>
-            <p data-fa="اگر رزومه آماده دارید و می‌خواهید سریع منتشر شوید." data-en="Best if you already have a CV and want the fastest path to publish.">اگر رزومه آماده دارید و می‌خواهید سریع منتشر شوید.</p>
+            <p data-fa="فایل‌های سایت یا رزومه خود را بارگذاری کنید، پیش‌نمایش را ببینید و با یک لینک حرفه‌ای منتشر شوید." data-en="Upload your website files or CV, review the preview, and publish with a professional link.">فایل‌های سایت یا رزومه خود را بارگذاری کنید، پیش‌نمایش را ببینید و با یک لینک حرفه‌ای منتشر شوید.</p>
             <ul>
-              <li data-fa="بارگذاری PDF یا Word" data-en="PDF or Word upload">بارگذاری PDF یا Word</li>
+              <li data-fa="بارگذاری HTML/CSS/JS، ZIP، PDF یا DOCX" data-en="HTML/CSS/JS, ZIP, PDF, or DOCX upload">بارگذاری HTML/CSS/JS، ZIP، PDF یا DOCX</li>
               <li data-fa="ویرایش پیش از انتشار" data-en="Edit before publishing">ویرایش پیش از انتشار</li>
               <li data-fa="دامنه شخصی و آمار بازدید" data-en="Personal URL and visitor analytics">دامنه شخصی و آمار بازدید</li>
             </ul>
-            <a class="btn btn-primary" href="signup.html?plan=Standard" data-fa="شروع با استاندارد" data-en="Start Standard">شروع با استاندارد</a>
+            <a class="btn btn-primary" href="signup.html" data-fa="شروع آزمایش ۳ روزه" data-en="Start the 3-day trial">شروع آزمایش ۳ روزه</a>
           </article>
 
           <article class="card plan featured">
@@ -539,7 +543,7 @@
 
           <details class="card faq-item">
             <summary data-fa="اگر رزومه آماده نداشته باشم چه؟" data-en="Can I start without a CV?">اگر رزومه آماده نداشته باشم چه؟</summary>
-            <div class="faq-answer" data-fa="بله. پلن پریمیوم با یک مصاحبه کوتاه شروع می‌شود و اطلاعات شما را به یک پیش‌نویس حرفه‌ای تبدیل می‌کند." data-en="Yes. Premium starts with a short guided interview and turns your answers into a polished draft.">بله. پلن پریمیوم با یک مصاحبه کوتاه شروع می‌شود و اطلاعات شما را به یک پیش‌نویس حرفه‌ای تبدیل می‌کند.</div>
+            <div class="faq-answer" data-fa="بله. اگر فایل‌های HTML/CSS/JS یا ZIP سایت خود را دارید، می‌توانید همان‌ها را مستقیماً بارگذاری کنید." data-en="Yes. If you already have HTML/CSS/JS files or a website ZIP, you can upload them directly.">بله. اگر فایل‌های HTML/CSS/JS یا ZIP سایت خود را دارید، می‌توانید همان‌ها را مستقیماً بارگذاری کنید.</div>
           </details>
 
           <details class="card faq-item">

@@ -344,6 +344,10 @@ button:disabled {
   gap: 18px;
   background: linear-gradient(135deg, #eff8f5, #fff);
 }
+#premium-upgrade,
+#premium-brief {
+  display: none !important;
+}
 .upgrade a {
   background: var(--brand);
   color: #fff;

@@ -154,8 +154,7 @@ async function waitForFrontendBoot(pageInstance) {
   );
   await pageInstance.waitForFunction(() => {
     const amount =
-      document.querySelector('[data-dropcv-plan-amount="Standard"]') ||
-      document.querySelector('[data-dropcv-plan-amount="Premium"]');
+      document.querySelector('[data-dropcv-plan-amount="Standard"]');
     return amount && !/loading price/i.test(amount.textContent || '');
   });
   await pageInstance.waitForTimeout(1000);
@@ -175,9 +174,9 @@ try {
     page.locator('a[href="signup.html"]').first().click(),
   ]);
   assert.ok(page.url().includes('/signup.html'), 'Signup link should navigate to the signup page');
-  await page.waitForSelector('section[data-step="1"] button[data-plan="Premium"]');
+  await page.waitForSelector('section[data-step="1"] button[data-plan="Standard"]');
   await waitForFrontendBoot(page);
-  await page.locator('section[data-step="1"] button[data-plan="Premium"]').click();
+  await page.locator('section[data-step="1"] button[data-plan="Standard"]').click();
   await page.locator('section[data-step="1"] button[data-next]').click();
   await page.waitForSelector('#fullName');
   await expectNoRuntimeErrors('Signup step 2');
@@ -216,8 +215,8 @@ try {
     timeout: 60000,
   });
   await waitForFrontendBoot(page);
-  await page.waitForSelector('section[data-step="1"] button[data-plan="Premium"]');
-  await page.locator('section[data-step="1"] button[data-plan="Premium"]').click();
+  await page.waitForSelector('section[data-step="1"] button[data-plan="Standard"]');
+  await page.locator('section[data-step="1"] button[data-plan="Standard"]').click();
   await page.locator('section[data-step="1"] button[data-next]').click();
   await page.waitForSelector('#registerBtn');
   await page.locator('#fullName').fill(fullName);
@@ -242,18 +241,14 @@ try {
   assert.equal(
     await page.locator('#section-site .dropcv-upload-zone:visible').count(),
     1,
-    'Premium My Site should show one upload zone',
+    'My Site should show one upload zone',
   );
   assert.equal(
     await page.locator('#section-site input[type="file"]').getAttribute('accept'),
     '.html,.css,.js,.zip,.pdf,.docx',
     'Combined upload should accept site bundles and CV documents',
   );
-  assert.equal(
-    await page.locator('#premium-brief [required]').count(),
-    4,
-    'Premium brief should expose the four required identity fields',
-  );
+  assert.equal(await page.locator('#premium-brief:visible').count(), 0, 'No Premium brief should be visible');
 
   assert.equal(
     await page.locator('.nav[data-section="link"]').isHidden(),

@@ -37,7 +37,11 @@
     );
   }
   function publicUrl() {
-    return (state.user && state.user.publicUrl) || "";
+    var url = (state.user && state.user.publicUrl) || "";
+    return url.replace(
+      "https://drop-cv-backend.vercel.app/",
+      "https://drop-cv-backend-apyfm3oua-dropcv.vercel.app/",
+    );
   }
   function setLanguage(lang) {
     state.language = lang === "en" ? "en" : "fa";

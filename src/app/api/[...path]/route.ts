@@ -3,9 +3,10 @@ import { Buffer } from "node:buffer";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-const BACKEND_PROXY_URL = (process.env.BACKEND_PROXY_URL || process.env.API_PROXY_URL || "")
-  .trim()
-  .replace(/\/$/, "");
+// Emergency production pin: the backend project alias currently points to a
+// failed deployment. Keep application traffic on the last verified immutable
+// deployment until Vercel control-plane access is restored.
+const BACKEND_PROXY_URL = "https://drop-cv-backend-apyfm3oua-dropcv.vercel.app";
 
 function filterRequestHeaders(headers: Headers) {
   const forwarded = new Headers();

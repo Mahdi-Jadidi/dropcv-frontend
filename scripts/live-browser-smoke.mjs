@@ -238,41 +238,37 @@ try {
     'Signup session should remain on the dashboard after authentication settles',
   );
 
-  await page.locator('.nav-link[data-section="site"]').click();
-  const premiumTabs = await page.locator('#site-tabs-root .dropcv-tab:visible').allTextContents();
-  assert.deepEqual(
-    premiumTabs.map((label) => label.trim()),
-    ['Upload files', 'Tell us who you are'],
-    'Premium My Site should show only the combined upload and story sections',
-  );
+  await page.locator('.nav[data-section="site"]').click();
   assert.equal(
-    await page.locator('#site-tabs-root .dropcv-upload-zone:visible').count(),
+    await page.locator('#section-site .dropcv-upload-zone:visible').count(),
     1,
     'Premium My Site should show one upload zone',
   );
   assert.equal(
-    await page.locator('#site-tabs-root input[type="file"]').first().getAttribute('accept'),
-    '.html,.htm,.css,.js,.zip,.pdf,.docx',
+    await page.locator('#section-site input[type="file"]').getAttribute('accept'),
+    '.html,.css,.js,.zip,.pdf,.docx',
     'Combined upload should accept site bundles and CV documents',
   );
-  await page.getByRole('button', { name: 'Tell us who you are' }).click();
-  assert.ok(
-    await page.locator('#site-tabs-root textarea:visible').count() > 0,
-    'Premium story section should expose text fields',
+  assert.equal(
+    await page.locator('#premium-brief [required]').count(),
+    4,
+    'Premium brief should expose the four required identity fields',
   );
 
-  await page.locator('.nav-link[data-section="domains"]').click();
-  await page.waitForSelector('#domainList .domain-item');
-  assert.ok(
-    !(await page.locator('#domainList').innerText()).includes('Loading'),
-    'Domains should render the account public URL instead of placeholders',
+  assert.equal(
+    await page.locator('.nav[data-section="link"]').isHidden(),
+    true,
+    'Public Link should stay hidden until the first site exists',
   );
-
-  await page.locator('.nav-link[data-section="analytics"]').click();
-  await page.waitForSelector('#referrerTable tr');
-  await page.locator('.nav-link[data-section="settings"]').click();
-  assert.equal(await page.locator('#contact-email').inputValue(), email, 'Settings should show the authenticated email');
-  assert.equal(await page.locator('#full-name').isDisabled(), true, 'Unsupported profile editing should not look interactive');
+  assert.equal(
+    await page.locator('.nav[data-section="analytics"]').isHidden(),
+    true,
+    'Analytics should stay hidden until the first site exists',
+  );
+  await page.locator('.nav[data-section="settings"]').click();
+  assert.equal(await page.locator('#settings-form input[name="email"]').inputValue(), email, 'Settings should show the authenticated email');
+  assert.equal(await page.locator('#settings-form input[name="email"]').isDisabled(), true, 'Email should remain read-only outside the verified change flow');
+  assert.equal(await page.locator('#settings-form input[name="fullName"]').isEnabled(), true, 'Professional name should be editable');
 
   await Promise.all([
     page.waitForNavigation({ waitUntil: 'domcontentloaded', timeout: 30000 }).catch(() => null),

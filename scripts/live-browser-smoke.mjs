@@ -226,15 +226,15 @@ try {
   await page.locator('#password').fill(password);
 
   await Promise.all([
-    page.waitForURL('**/dashboard-premium.html', { waitUntil: 'domcontentloaded', timeout: 60000 }),
+    page.waitForURL('**/dashboard.html', { waitUntil: 'domcontentloaded', timeout: 60000 }),
     page.locator('#registerBtn').click(),
   ]);
-  assert.ok(page.url().includes('/dashboard-premium.html'), 'Signup should redirect to the premium dashboard');
+  assert.ok(page.url().includes('/dashboard.html'), 'Signup should redirect to the shared dashboard');
   await page.waitForSelector('.sign-out-link');
   await waitForAuthenticatedDashboard(email, 'Signup dashboard');
   await page.waitForTimeout(8000);
   assert.ok(
-    page.url().includes('/dashboard-premium.html'),
+    page.url().includes('/dashboard.html'),
     'Signup session should remain on the dashboard after authentication settles',
   );
 
@@ -288,14 +288,14 @@ try {
   await page.locator('#password').fill(password);
 
   await Promise.all([
-    page.waitForURL('**/dashboard-premium.html', { waitUntil: 'domcontentloaded', timeout: 60000 }),
+    page.waitForURL('**/dashboard.html', { waitUntil: 'domcontentloaded', timeout: 60000 }),
     page.locator('#submit').click(),
   ]);
-  assert.ok(page.url().includes('/dashboard-premium.html'), 'Login should redirect to the premium dashboard');
+  assert.ok(page.url().includes('/dashboard.html'), 'Login should redirect to the shared dashboard');
   await waitForAuthenticatedDashboard(email, 'Login dashboard');
   await page.waitForTimeout(8000);
   assert.ok(
-    page.url().includes('/dashboard-premium.html'),
+    page.url().includes('/dashboard.html'),
     'Login session should remain on the dashboard after authentication settles',
   );
 

@@ -158,9 +158,7 @@ window.dropCVApi = {
     return this.request('DELETE', '/api/users/account', { password, confirmation: 'DELETE' });
   },
   getDashboardUrl(plan) {
-    return String(plan) === 'Premium'
-      ? 'dashboard-premium.html'
-      : 'dashboard-standard.html';
+    return 'dashboard.html';
   },
   async unpublishSite(deploymentId) {
     return this.request('POST', `/api/sites/${deploymentId}/unpublish`);
